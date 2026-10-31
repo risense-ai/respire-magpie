@@ -1,6 +1,6 @@
 # respire-memory capabilities and boundaries
 
-Applies to **v0.3.0**. See the [policy-correction report](TEST-REPORT-0.3.0.md) and [historical v0.2.1 acceptance report](TEST-REPORT.md). A working memory round trip is not proof of full engine-policy compliance.
+Applies to **v0.3.1**. See the [policy-correction report](TEST-REPORT-0.3.0.md) and [historical v0.2.1 acceptance report](TEST-REPORT.md). A working memory round trip is not proof of full engine-policy compliance.
 
 ## Agent self-evolution through experience
 
@@ -34,6 +34,11 @@ This feedback loop changes reusable memory, not model weights. Readback confirms
 The gateway also lacks native client SessionStart/resume/compaction events, trustworthy automatic client plan-mode detection, guaranteed native status lines, and visibility into the client's filesystem/tool actions outside gateway traffic. Use readOnly explicitly for plan/no-write workflows.
 
 ## Operational limits
+
+- Known-dead PID locks recover; live contention waits up to five seconds. Successful writes remain completed when only session-notification metadata fails.
+- Only active jobs count toward capacity. Terminal evidence is retained 24 hours; completed receipts and ordinary turn/session caches seven days. Compact unknown-write markers remain without old raw bodies.
+- Worker jobs/control leases are bounded to five minutes, checked before each new generation/write. Disable/uninstall without another request is not an immediate cancellation signal; already accepted work can continue within the bound.
+- Display hints default off. Complete policy/per-turn storage remain part of the explicit Respire integration, including empty recall results. Fresh identity checks are retained rather than caching account identity across requests.
 
 - Only completed, visible, supported turns qualify. Lost notifications before enqueue, truncated replies, unresolved tools, sensitive content and unseen Responses previous_response_id history can prevent archival. These are incomplete rounds, not saved rounds.
 - Raw images, audio and private reasoning are not archived. Missing history is not reconstructed.

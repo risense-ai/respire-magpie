@@ -10,6 +10,8 @@
 
 插件支持自动召回正文、显式存储、会话规则、后台提炼与查重归档、大回合分段、证据回读、持久去重，以及只读和显示偏好。
 
+审查修复：[0.3.1 审查逐项回复与验证](https://github.com/risense-ai/respire-magpie/blob/main/docs/REVIEW-RESPONSE-0.3.1.md)。
+
 详细说明：[功能与边界矩阵](https://github.com/risense-ai/respire-magpie/blob/main/docs/FEATURES.md) · [0.3.0 政策修复报告](https://github.com/risense-ai/respire-magpie/blob/main/docs/TEST-REPORT-0.3.0.md) · [0.2.1 历史验收](https://github.com/risense-ai/respire-magpie/blob/main/docs/TEST-REPORT.md)。核心链路已经实现并验收；自动识别客户端 plan、真实 SessionStart/恢复/压缩事件和原生状态行仍受宿主接口限制，不能视为与 Codex 全功能等价。
 
 0.3.0 每轮自动存检默认开启，使用前必须配置生成模型。没有模型、主动关闭归档或处于只读模式时，插件会说明未满足完整读存流程；不会把待处理当作已存。原始对话采集仍默认关闭。网关不会取得或复用客户端私有登录凭据，也不会注册或执行客户端工具。
@@ -21,7 +23,7 @@
 复制给本地助手，并替换目录：
 
 ```text
-请安装 D:\sources\repos-new\gh\1memory\respire-magpie 中的 Respire Magpie 插件。
+请安装 <插件完整目录> 中的 Respire Magpie 插件。
 先读 README.md，检查 Magpie、Bun 和 rsrs --client-only status --json。
 复用现有 Respire 账号、模型和 Runtime；不自行安装、启动或升级 Runtime，不索取凭据。
 检查 magpie plugin list --json，避免重复；尚未安装时执行 magpie plugin add <完整目录>。
@@ -39,7 +41,7 @@
 
 ```powershell
 rsrs --client-only status --json
-magpie plugin add D:\sources\repos-new\gh\1memory\respire-magpie
+magpie plugin add <插件完整目录>
 ```
 
 也可在完整插件目录执行 `magpie plugin add .`。本地安装引用此目录，不要移动或删除它。可检出仓库，也可解压 Release tgz 后安装其中的 package 目录。目录必须包含 package.json 和全部运行模块。
@@ -59,7 +61,7 @@ magpie plugin add D:\sources\repos-new\gh\1memory\respire-magpie
   "remember": true,
   "readOnly": false,
   "injectRules": true,
-  "showMemoryStatus": true,
+  "showMemoryStatus": false,
   "capture": false,
   "archive": true,
   "generationBaseUrl": "",
@@ -80,7 +82,7 @@ magpie plugin add D:\sources\repos-new\gh\1memory\respire-magpie
 | remember | 处理“记：”“存：”“记录：”“记住：”“remember:”前缀，默认开启。 |
 | readOnly | 禁止本插件显式存储、采集及后台写入，不限制其他客户端工具。 |
 | injectRules | 兼容旧配置保留；0.3.0 不再允许此项关闭每轮完整政策读取与注入。 |
-| showMemoryStatus | 提供 Memory、Used 及上次归档状态提示，默认开启；不能保证客户端显示，严格格式应省略标签。 |
+| showMemoryStatus | 提供 Memory、Used 及上次归档状态提示，默认关闭；不能保证客户端显示，严格格式应省略标签。 |
 | capture | 完成回合原始文字与工具记录保存为 trivial 日记，默认关闭。 |
 | archive | 每个完成回合保存过程日记，并用独立模型提炼、查重、更新或挂靠与回读，默认开启；必须配置模型。关闭即不满足完整每轮必存。 |
 | generationBaseUrl | 兼容 Chat Completions 的基础地址，如 https://provider.example/v1；插件追加 /chat/completions。远程须 HTTPS，回环可 HTTP，不跟随重定向。 |
@@ -109,7 +111,7 @@ magpie plugin add D:\sources\repos-new\gh\1memory\respire-magpie
 
 最终归档收到或回读全部用户原文后，才允许写入或成功结束。工具中段仍可通过证据工具读取。模型交互最多 40 轮，总预算 280 秒，单次生成最多 60 秒。超限或失败标为 unconfirmed，不假装完成。
 
-状态目录使用 AES-256-GCM 加密记录并原子替换文件；state.key 同目录保存，只保护未同时取得密钥的离线记录，不等同于系统密钥链或 Respire 库的加密。应保护和备份整个目录。来源证据随任务保留，最多 512 个队列记录；满额拒绝新入队，不自动删除证据。
+状态目录使用 AES-256-GCM 加密记录并原子替换文件；state.key 同目录保存，只保护未同时取得密钥的离线记录，不等同于系统密钥链或 Respire 库的加密。应保护和备份整个目录。队列上限 512 只计等待和运行任务，完成回执不会耗尽容量。终态原始证据保留 24 小时；完成回执及回合/会话缓存保留七天。维护在前台每小时及 worker 启动时执行；未确认写入只保留紧凑标记，不重放。证据过期后 evidence 明确报错，不伪造原文。以上只清理本地队列/缓存，不删除 Respire 库里的记忆。宿主关闭时不会运行清理，过期数据在下次维护时移除。
 
 在完整插件目录，用 Node.js 24+ 或对应 Bun 解释器运行：
 
@@ -121,11 +123,13 @@ node worker.mjs recover
 node worker.mjs evidence <完整回合来源摘要>
 ```
 
-setup 检查默认 Runtime、模式及状态目录，不发模型请求或安装引擎。status 显示安全进度、回执 ID 和错误类别。run 处理队列，正常后续请求也会唤醒队列。recover 只在原 worker 已死亡时清理进程锁：未尝试写入的中断任务重新入队，曾尝试写入的标为 unconfirmed，绝不重放。
+setup 检查默认 Runtime、模式及状态目录，不发模型请求或安装引擎。status 显示安全进度、回执 ID 和错误类别。run 自动恢复已确认 PID 死亡的锁并处理队列；新任务唤醒 worker，每个宿主生命周期只额外唤醒一次恢复。活跃锁最多等待五秒。recover 复用同一安全恢复流程；未尝试写入且未过期的中断任务可重新入队，曾尝试写入的标为 unconfirmed，绝不重放。
 
-自定义目录时，setup/status/run/recover 的第二个参数为绝对目录；evidence 的第二个参数是来源摘要，第三个参数是目录。evidence 会输出原始内容，应只在获准查看的终端运行。遗留回合记录锁不会自动删除，应先核实写入结果，不要删状态绕过未知回执。
+自定义目录时，setup/status/run/recover 的第二个参数为绝对目录；evidence 的第二个参数是来源摘要，第三个参数是目录。evidence 会输出原始内容，应只在获准查看的终端运行。已确认 PID 死亡的记录锁可自动恢复；无 PID 的旧锁或未知所有者仍须人工核对。不要删密钥、回执或未知写入标记绕过失败。
 
 持久队列不能弥补宿主入队前丢失完成通知。当前版本跳过 Responses previous_response_id 的历史续接，不伪造未观察到的完整历史。图片、音频和私有推理不保存。
+
+**后台有效期**：任务和控制租约最多五分钟；worker 在每次新模型请求及写入前复核控制、账号和引擎模式。插件停用/卸载且没有后续请求时，宿主不能立即通知已分离的进程，已接受操作可能在有效期内继续，但到期后不再发起生成请求。账号身份仍逐请求实时核对，不使用可能跨账号复用旧记忆的 TTL 缓存。
 
 ## 与 Codex 的对齐及宿主限制
 

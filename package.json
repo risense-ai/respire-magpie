@@ -1,6 +1,6 @@
 {
   "name": "@rsrsai/magpie",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "帮助 AI Agent 通过记忆召回、经验积累与后台归档持续自进化",
   "type": "module",
   "license": "MIT",
@@ -13,6 +13,7 @@
   "files": [
     "respire.hooks.mjs",
     "runtime.mjs",
+    "lock.mjs",
     "conversation.mjs",
     "page",
     "README.md",
@@ -44,7 +45,7 @@
       "capture": false,
       "readOnly": false,
       "archive": true,
-      "showMemoryStatus": true,
+      "showMemoryStatus": false,
       "injectRules": true,
       "generationBaseUrl": "",
       "generationModel": "",
