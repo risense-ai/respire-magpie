@@ -4,6 +4,8 @@ This responds to the review of community head 40fec72. It is an upstream enginee
 
 The first repair candidate, v0.3.1, failed Windows CI with a transient EPERM while removing an empty lock directory under concurrent access. Its tag is retained and no release assets were published. The follow-up candidate is v0.3.2, with bounded Windows cleanup retries. It also corrects a separate empty-recall bug: hiding display hints must not discard the complete engine policy. The existing checks now cover empty recall with hints off across all four adapters.
 
+The first v0.3.2 main-branch CI run passed macOS/Linux but exposed a separate fixture error on Windows: the final pending-write probe reused a 20-second abort signal created before 512 fsynced capacity records. RPC already has its own per-request deadline. The fixture now uses that deadline for independent calls and a fresh signal for its segmented model operation; production request deadlines are unchanged.
+
 ## Review disposition
 
 | Point | Changes / disposition |
