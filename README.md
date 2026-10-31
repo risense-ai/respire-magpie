@@ -20,7 +20,7 @@
 
 [0.3.3 npm 自动发布验收报告](docs/NPM-PUBLISH-0.3.3.md)：Chrome 可信发布连接显示 Valid；GitHub OIDC 发布、公共 npm 安装及签名/attestation 校验通过。
 
-[0.3.10 安装入口更正与实机页面验收](docs/NPM-LIVE-0.3.10.md)：本体安装统一使用 `rsrs-cli`；首次使用说明、公共包与隔离 Magpie 页面已核对。用户当前选择保持主网关插件移除，与隔离验收分开。
+[0.3.10 安装入口更正与实机页面验收](docs/NPM-LIVE-0.3.10.md)：本体安装统一使用 `rsrs-cli`；首次使用说明、公共包与隔离 Magpie 页面已核对，验证范围和已知限制见报告。
 
 ## 让 AI 安装
 
