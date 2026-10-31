@@ -49,4 +49,10 @@ Scripts, source/job IDs, locators, responses and assertions remain private in ig
 
 ## Remaining boundaries
 
+### Actual npm UI follow-up
+
+The installed 0.3.6 package was subsequently opened through the actual Magpie web frontend, using its temporary loopback-only UI server. In the in-app browser, the sidebar and settings-page header displayed the Respire icon and respire-memory name, and the page displayed the agent self-evolution description. The installed-package list displayed the same icon, @rsrsai/magpie v0.3.6 and its enabled state. The list uses the npm package identifier; the page/sidebar use the configured display name. No options, theme, account, gateway enablement or browser-extension settings were changed during this inspection.
+
+The first Chrome attempt loaded the settings page but was then replaced by Magpie's page-error panel: Failed to connect to MetaMask. The captured console stack points to the MetaMask extension's chrome-extension inpage.js and Magpie's plugin-page error handler. The same page rendered normally in the in-app browser. This establishes a Chrome-extension interference case, not a successful Chrome page acceptance or a native desktop-window acceptance. The browser extensions and host error handler were not modified. Private screenshots and the error trace are retained under .verification/npm-live/icon036-*; no temporary web sign-in key is included here.
+
 The completion notification runs after the answer. Before-send persistence remains unsupported. The live model procedure uses Chat Completions; four-adapter fixture success is not live all-protocol acceptance. Native desktop rendering, exhaustive crash/account-switch/load qualification and community approval/merge remain separate. Previously accepted work can continue within its five-minute control lease; an accepted write cannot be revoked. Mixing legacy PID-file writers still inherits their check/unlink race. Large raw-capture bodies can exceed the bounded fragment verification capability and must not be represented as successfully verified.
