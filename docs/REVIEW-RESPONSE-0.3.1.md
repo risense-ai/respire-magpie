@@ -49,6 +49,8 @@ The v0.3.3 preflight at 4fc5411 exposed another Windows acquisition race: an own
 
 The stronger check also exposed Windows scandir EPERM during a recovery probe while a competing release removed the directory. v0.3.3 retries those acquisition-only open/probe failures within the existing deadline; it never enters a critical section without verifying sole ownership. The existing eight-writer check now runs eight batches and verifies all 64 increments. Permanent failures still terminate; unknown/live owners and uncertain writes are not deleted or replayed. npm distribution first published v0.3.2 using Chrome-confirmed authentication; the next patch is used to validate the browser-configured OIDC connection.
 
+At 7f170e2, Windows passed, while macOS Bun 1.3.6 reported EINVAL on owner-file open in the four-process contention probe. The same bounded owner-publication retry now includes that observed macOS Bun error. No failed check was skipped or replaced by a same-code rerun.
+
 ### Remaining host limits
 
 The engine's strict before-send persistence requirement still needs an appropriate host callback or a client-owned loop: the current notification is after reply completion. Native desktop rendering, live all-protocol sessions, exhaustive crash/power-loss/account-switch recovery, npm first publication and marketplace approval remain outside the proven result. See the [feature matrix](FEATURES.md) and [0.3.0 correction report](TEST-REPORT-0.3.0.md).

@@ -42,8 +42,10 @@ export async function acquireLock(path, { waitMs = 5000 } = {}) {
         };
         await unlink(join(path, owner));
       } catch (error) {
-        // A directory removed before ownership is published reports open EPERM on Windows.
-        if (process.platform === 'win32' && error.code === 'EPERM' && error.syscall === 'open' && error.path === join(path, owner)) {
+        // Concurrent parent removal reports EPERM on Windows and EINVAL on macOS Bun.
+        const racedOpen = (process.platform === 'win32' && error.code === 'EPERM')
+          || (process.platform === 'darwin' && process.versions.bun && error.code === 'EINVAL');
+        if (racedOpen && error.syscall === 'open' && error.path === join(path, owner)) {
           if (Date.now() >= deadline) throw error;
           await delay(25); continue;
         }

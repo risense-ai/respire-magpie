@@ -1,6 +1,6 @@
 # respire-memory capabilities and boundaries
 
-Applies to **v0.3.2–v0.3.3**. v0.3.3 adds bounded Windows retries when owner publication or a recovery probe races directory removal, and updates npm distribution documentation. See the [review repair report](REVIEW-RESPONSE-0.3.1.md), [policy-correction report](TEST-REPORT-0.3.0.md) and [historical v0.2.1 acceptance report](TEST-REPORT.md). A working memory round trip is not proof of full engine-policy compliance.
+Applies to **v0.3.2–v0.3.3**. v0.3.3 handles observed Windows/macOS Bun errors during concurrent lock acquisition within the existing deadline, and updates npm distribution documentation. See the [review repair report](REVIEW-RESPONSE-0.3.1.md), [policy-correction report](TEST-REPORT-0.3.0.md) and [historical v0.2.1 acceptance report](TEST-REPORT.md). A working memory round trip is not proof of full engine-policy compliance.
 
 ## Agent self-evolution through experience
 
