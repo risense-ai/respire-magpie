@@ -31,7 +31,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 25
     outputs:
-      needed: ${{ steps.plan.outputs.needed }}
+      needed: ${{ steps.base.outputs.changed }}
       branch: ${{ steps.plan.outputs.branch }}
       pr: ${{ steps.plan.outputs.pr }}
       version: ${{ steps.plan.outputs.version }}
@@ -126,8 +126,23 @@ jobs:
           printf 'checkout_repo=%s\nbase_sha=%s\n' "$checkout_repo" "$(git -C market rev-parse HEAD)" >> "$GITHUB_OUTPUT"
           node scripts/sync-community.mjs source market
           git -C market diff --check
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          import { execFileSync as exec } from 'node:child_process';
+          import { isDeepStrictEqual } from 'node:util';
+          const manifest = 'packages/respire-memory/package.json';
+          const paths = exec('git',['-C','market','diff','--name-only'],{encoding:'utf8'}).trim().split('\n').filter(Boolean);
+          let changed = paths.length > 0;
+          if (!process.env.PR && paths.length === 1 && paths[0] === manifest) {
+            const before = JSON.parse(exec('git',['-C','market','show','HEAD:' + manifest],{encoding:'utf8'}));
+            const after = JSON.parse(fs.readFileSync('market/' + manifest));
+            changed = !isDeepStrictEqual({...before, version:null}, {...after, version:null});
+          }
+          fs.appendFileSync(process.env.GITHUB_OUTPUT, `changed=${changed}\n`);
+          if (!changed) console.log('No substantive community change; skip tests, push and PR');
+          NODE
       - name: Existing community checks
-        if: steps.plan.outputs.needed == 'true'
+        if: steps.base.outputs.changed == 'true'
         working-directory: market
         run: |
           HOME=$(mktemp -d) bun test
