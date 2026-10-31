@@ -1,5 +1,15 @@
 # Magpie PR 553 review repair report
 
+## v0.3.5 live findings
+
+The real npm-installed 0.3.4 run stored its test fact and ordinary-turn diary, but fresh foreground recall failed because the 12,268-byte causal chain caused the entire matching record to exceed a 12,000-byte allowance. A fitting complete record is now retained while the over-budget chain is explicitly marked omitted; the host still performs its chain read. The existing check exercises this case.
+
+The actual Runtime aggregates trivial writes into a shared daily source. Both remember output and show could therefore disclose unrelated daily entries, and an ID-only readback did not establish this turn's diary. The repair appends a neutral turn source marker, strips aggregated remember output, and replaces known current-diary show with bounded diary-search/diary-fragment. Full content, source/version, Unicode ranges and overlapping fragments must match. Only this turn's verified body and complete locators reach the model. An unverified diary cannot be overwritten by another write; partial IDs are rejected before reading; incomplete verification stops further writes. Raw capture uses the same strict verifier and cannot claim success when its full body exceeds the bounded fragment allowance.
+
+The existing fixture now returns one shared daily ID containing unrelated content; assertions reject disclosure through either write output or readback. It exercises overlapping fragments, source-only incomplete content, required readback before subsequent writes and no replay after unconfirmed verification. A direct real-Runtime candidate probe wrote and exactly verified a short diary through two overlapping Unicode fragments, without a whole-source show. This is protocol evidence, not yet npm/native deployment acceptance. See the [failed 0.3.4 acceptance](NPM-LIVE-0.3.4.md); no failed request was replayed.
+
+A later local Windows run exposed EBUSY/unlink on the exact legacy PID-file path in the existing four-child contention check. A bounded 25 ms wait returns to the full ownership probe rather than retrying deletion using the old PID observation. The original deadline and deletion conditions remain. Mixed old/new lock writers still inherit the legacy PID-file check/unlink race; this narrow repair does not claim a lock-protocol redesign.
+
 ## v0.3.4 follow-up to review 5722498530
 
 The reviewer accepted the fresh per-request identity check and display name, and independently reported 4187 passing community tests, 9 skipped, 0 failures at 10184ce. Two remaining blockers concerned repeated policy text and the ineffective injectRules option.
