@@ -1,5 +1,9 @@
 # Magpie PR 553 review repair report
 
+## v0.3.6 release follow-up
+
+The 0.3.5 [preflight](https://github.com/risense-ai/respire-magpie/actions/runs/41201290156) passed all three systems. Its repeated [release verification](https://github.com/risense-ai/respire-magpie/actions/runs/41201489206) nevertheless failed on macOS Node 24.22.1: EINVAL/open on this acquisition's exact randomly named owner file, before ownership. The existing guard incorrectly limited this observed macOS race to Bun. 0.3.6 removes that runtime restriction while retaining platform, syscall, exact owner path, deadline, 25ms wait and sole-owner verification. The failed 0.3.5 tag is retained; no release asset/npm publication was allowed through its failed gate. Concurrently committed English model-facing prompts are preserved; persisted Chinese body/source markers remain unchanged.
+
 ## v0.3.5 live findings
 
 The real npm-installed 0.3.4 run stored its test fact and ordinary-turn diary, but fresh foreground recall failed because the 12,268-byte causal chain caused the entire matching record to exceed a 12,000-byte allowance. A fitting complete record is now retained while the over-budget chain is explicitly marked omitted; the host still performs its chain read. The existing check exercises this case.
