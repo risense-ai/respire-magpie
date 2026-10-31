@@ -1,5 +1,13 @@
 # Magpie PR 553 review repair report
 
+## v0.3.7 source-marker lookup and budget follow-up
+
+A later heartbeat wrote its diary successfully but exact readback stopped with diary-output-too-large. The real Runtime's semantic-ready hybrid search returned a 4,033-character details JSON for a 4,000-character request, including unrelated semantic matches. The matching source was present; an exact lexical lookup returned it alone in 1,017 characters. This is retained as a failed 0.3.6 observation, not a missing-write claim. No write was replayed: the known written body was subsequently verified through two versioned fragments using a read-only candidate check.
+
+A turn hash is an opaque exact locator. Its write-verification lookup now uses lexical mode, retaining the same limit, 4,000-character hard cap, source/version/range/full-body checks and no-replay behavior. Ordinary historical queries retain the hybrid default. Their tool boundary now also checks the actual Unicode-scalar details JSON against the requested budget instead of accepting up to 8,000 UTF-16 units for the whole envelope. Runtime budget overshoot is not silently forwarded or treated as an engine fix.
+
+The existing fixture simulates semantic-ready source lookup with unrelated matches exceeding 4,000 characters; reverting the exact lookup makes archival fail. It also verifies the ordinary hybrid default and rejection of an oversized historical result. Existing incomplete-body, overlap, raw-capture and no-replay checks remain. No new test file or dependency is added.
+
 ## v0.3.6 release follow-up
 
 Final 0.3.6 preflight 41202128290, repeated release/OIDC 41202277989 and exact community 7aba754 compatibility 41202129801 all passed. Public npm/native installation and three real isolated turns passed; the main gateway was switched to npm latest=0.3.6 and enabled with explicit user authorization, then passed its own ordinary-turn diary probe. See [complete scoped acceptance](NPM-LIVE-0.3.6.md), including per-turn full-policy evidence and bounded diary readback. The host timing and wider unverified limits remain unchanged.

@@ -32,7 +32,8 @@ function boundedDiaryArgs(command, args) {
 
 export async function readDiary(call, id, content, source) {
   if (!validId(id) || !/^[a-f0-9]{64}$/.test(source ?? '') || !content.includes(source)) throw new Error('diary-readback-source');
-  const found = await call(['diary-search', source, '--limit', '5', '--max-chars', '4000', '--mode', 'hybrid']);
+  // A turn hash is an exact locator, not a semantic history query.
+  const found = await call(['diary-search', source, '--limit', '5', '--max-chars', '4000', '--mode', 'lexical']);
   if (Array.from(JSON.stringify(found.details ?? {})).length > 4000) throw new Error('diary-output-too-large');
   const candidate = found.details?.items?.find(item => item.source_id === id && !item.truncated && item.text?.includes(source));
   if (found.status !== 'ok' || !candidate?.fragment_id || !candidate.source_version) throw new Error('diary-readback-unconfirmed');
@@ -113,7 +114,7 @@ export function memoryTools(call, { readOnly = false, source } = {}) {
         if (diary && error.message === 'diary-unsupported') diaryUnavailable = true
         throw error
       }
-      if (diary && JSON.stringify(doc).length > 8000) throw new Error('diary-output-too-large')
+      if (diary && Array.from(JSON.stringify(doc.details ?? {})).length > Number(args[args.indexOf('--max-chars') + 1])) throw new Error('diary-output-too-large')
       if (command === 'recall' && ['ok', 'skip'].includes(doc.status)) recalled = true
       if (command === 'prompt') {
         if (doc.status !== 'ok' || typeof doc.summary?.instructions !== 'string' || !doc.summary.instructions.trim()) throw new Error('invalid-engine-policy')

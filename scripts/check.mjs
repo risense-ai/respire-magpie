@@ -49,6 +49,7 @@ let generationRound = 0, unknownWrite = false, writes = 0, policyReady = true, e
 const savedId = '22222222-2222-4222-8222-222222222222';
 const diaryId = '33333333-3333-4333-8333-333333333333';
 const commandLog = [];
+const diaryLookups = [];
 const entries = new Map([[id, { id, title: 'Example', content: 'Historical evidence', project: '' }]]);
 const server = createServer(async (req, res) => {
   assert(!/magpie/i.test(req.headers['user-agent'] ?? ''));
@@ -83,6 +84,17 @@ const server = createServer(async (req, res) => {
         { ...envelope.details.items[0], fragment_id: 'fixture-neighbor', text: chars.slice(0, split + 8).join(''), end: split + 8 },
         { ...envelope.details.items[0], text: chars.slice(split).join(''), start: split }
       ];
+    }
+    if (command === 'diary-search') {
+      const sourceLookup = /^[a-f0-9]{64}$/.test(r.args[2]), mode = r.args[r.args.indexOf('--mode') + 1];
+      diaryLookups.push({ sourceLookup, mode });
+      if ((sourceLookup || r.args[2] === 'over-budget historical fixture') && mode === 'hybrid') {
+        // Real Runtime semantic-ready output exceeded its requested 4000-character budget.
+        const unrelated = { ...envelope.details.items[0], source_id: '44444444-4444-4444-8444-444444444444', text: '' };
+        envelope.details.items.push(unrelated);
+        unrelated.text = 'x'.repeat(Math.max(0, 4033 - Array.from(JSON.stringify(envelope.details)).length));
+        envelope.details.semantic_ready = true;
+      }
     }
   }
   if (command === 'remember') {
@@ -247,6 +259,9 @@ try {
   const readOnlySource = digest('read-only'); const readonly = makeJob(readOnlySource); readonly.o = { ...o, readOnly: true };
   await store.put('job-' + readOnlySource, readonly); await processJob(store, 'job-' + readOnlySource); assert.equal(writes, count);
   const guarded = memoryTools(call);
+  await guarded.run({ command: 'diary-search', args: ['historical project topic'] });
+  assert.equal(diaryLookups.at(-1).mode, 'hybrid', 'Ordinary history lookup must retain its hybrid default');
+  await assert.rejects(() => guarded.run({ command: 'diary-search', args: ['over-budget historical fixture'] }), /diary-output-too-large/);
   await assert.rejects(() => guarded.run({ command: 'remember', args: ['text', '--force'] }));
   await assert.rejects(() => guarded.run({ command: 'remember', args: ['text', '--importance', 'important', '--title', 'title', '--parent', id] }));
   await assert.rejects(() => guarded.run({ command: 'agent-config', args: ['--set', 'readonly=false'] }));
@@ -385,6 +400,7 @@ try {
     const beforeReplay = writes; await processJob(store, name); assert.equal(writes, beforeReplay);
   }
   assert.equal(wholeDiaryReads, 0);
+  assert(diaryLookups.filter(x => x.sourceLookup).every(x => x.mode === 'lexical'), 'Current-turn source hashes require exact lexical lookup');
   console.log('Detached worker check passed: gateway completion -> encrypted queue -> child process -> model tools -> readback.');
   console.log('Archive checks passed: real HTTP model tool loop, readback, encrypted persistence, unknown-write no-retry, read-only, tool restrictions and source-checked segmentation.');
   console.log('Review regressions passed: stale/live locks, receipts, capacity, retention, leases, stable history, four-protocol policy dedup/change/revert and neutral user agents.');

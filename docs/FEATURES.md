@@ -1,6 +1,6 @@
 # respire-memory capabilities and boundaries
 
-Applies to **v0.3.6**. Each new turn still reads the complete engine policy; identical policy text is injected once per conversation and again only on change. The ineffective injectRules option is removed. Oversized causal chains no longer discard fitting matching records; diary readback uses bounded, versioned fragments instead of exposing a shared daily source. See the [review repair report](REVIEW-RESPONSE-0.3.1.md), [policy-correction report](TEST-REPORT-0.3.0.md) and [historical v0.2.1 acceptance report](TEST-REPORT.md). A working memory round trip is not proof of full engine-policy compliance.
+Applies to **v0.3.7**. Each new turn still reads the complete engine policy; identical policy text is injected once per conversation and again only on change. The ineffective injectRules option is removed. Oversized causal chains no longer discard fitting matching records; diary readback uses bounded, versioned fragments instead of exposing a shared daily source. See the [review repair report](REVIEW-RESPONSE-0.3.1.md), [policy-correction report](TEST-REPORT-0.3.0.md) and [historical v0.2.1 acceptance report](TEST-REPORT.md). A working memory round trip is not proof of full engine-policy compliance.
 
 ## Agent self-evolution through experience
 
@@ -50,3 +50,5 @@ The gateway also lacks native client SessionStart/resume/compaction events, trus
 - No exhaustive crash recovery, account-switch race, concurrent-load, power-loss, live all-protocol or native desktop rendering acceptance is claimed.
 
 Installation and recovery commands: [README](../README.md).
+
+Version 0.3.7 locates opaque write-source hashes lexically; ordinary history tools retain hybrid defaults. Actual Unicode-scalar details JSON must fit its requested budget. See the [readback follow-up](NPM-LIVE-0.3.7.md).

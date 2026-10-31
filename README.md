@@ -179,3 +179,5 @@ setup 检查默认 Runtime、模式及状态目录，不发模型请求或安装
 亮暗 SVG 取自项目 icon/，副本在 page/。配置页跟随官方 bridge 的 data-theme，README 用 picture。插件列表内嵌自适应 SVG data URI，侧栏使用 page/icon.svg，无需外网。单文件复用同源 DSH 组合。已验收跟随系统亮暗主题的实际显示；宿主强制主题与系统主题不一致的情况尚未验收。
 
 参考 [Magpie Hook 契约](https://github.com/yetone/magpie/blob/main/docs/subsystems/gateway-request-hooks.md) 和 [PowerContext 插件](https://github.com/magpie-community/plugins/tree/main/packages/powercontext)。对话解析器为 MIT 改编；证据处理和受限工具复用 Respire Codex。见 NOTICE 和 LICENSE。
+
+0.3.7 的写后日记核验按回合来源标记执行 lexical 精确定位；一般历史查询仍默认 hybrid。两者都按实际 details JSON 检查请求预算，不放宽 4000 字符上限。见 [预算与回读跟进](docs/NPM-LIVE-0.3.7.md)。
