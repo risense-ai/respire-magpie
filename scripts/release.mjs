@@ -1,0 +1,10 @@
+import { readFileSync, writeFileSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
+const pkg = JSON.parse(readFileSync('package.json', 'utf8'));
+if (process.env.GITHUB_REF_NAME && process.env.GITHUB_REF_NAME !== `v${pkg.version}`) throw new Error('Release tag must match package version');
+const npm = process.platform === 'win32' ? 'npm.cmd' : 'npm';
+const packed = JSON.parse(execFileSync(npm, ['pack', '--json'], { encoding: 'utf8', shell: process.platform === 'win32' }))[0];
+const digest = createHash('sha256').update(readFileSync(packed.filename)).digest('hex');
+writeFileSync('SHA256SUMS', `${digest}  ${packed.filename}\n`, 'utf8');
+console.log(`Prepared ${packed.filename} and SHA256SUMS`);
