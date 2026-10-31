@@ -2,6 +2,8 @@
 
 ## v0.3.6 release follow-up
 
+Final 0.3.6 preflight 41202128290, repeated release/OIDC 41202277989 and exact community 7aba754 compatibility 41202129801 all passed. Public npm/native installation and three real isolated turns passed; the main gateway was switched to npm latest=0.3.6 and enabled with explicit user authorization, then passed its own ordinary-turn diary probe. See [complete scoped acceptance](NPM-LIVE-0.3.6.md), including per-turn full-policy evidence and bounded diary readback. The host timing and wider unverified limits remain unchanged.
+
 The 0.3.5 [preflight](https://github.com/risense-ai/respire-magpie/actions/runs/41201290156) passed all three systems. Its repeated [release verification](https://github.com/risense-ai/respire-magpie/actions/runs/41201489206) nevertheless failed on macOS Node 24.22.1: EINVAL/open on this acquisition's exact randomly named owner file, before ownership. The existing guard incorrectly limited this observed macOS race to Bun. 0.3.6 removes that runtime restriction while retaining platform, syscall, exact owner path, deadline, 25ms wait and sole-owner verification. The failed 0.3.5 tag is retained; no release asset/npm publication was allowed through its failed gate. Concurrently committed English model-facing prompts are preserved; persisted Chinese body/source markers remain unchanged.
 
 ## v0.3.5 live findings

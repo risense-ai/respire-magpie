@@ -1,5 +1,7 @@
 # npm and native-host acceptance: 0.3.6
 
+**Result: PASS for the scoped npm/native Chat acceptance.** Public latest is 0.3.6. Runtime artifact: b24114143ef55e8e89b6d945d8478250447d5ff2; exact community contribution: 7aba754db7c67c0dcf884793d84a82437e3f18ed. Main-gateway npm installation is enabled with the user's explicit authorization for eligible conversations. PR 553 is still open and awaiting review; this is not community installation/merge acceptance.
+
 Verification date: 2026-10-31. The 0.3.5 candidate at 92ec700339f14e19aa91b846b0b9d679a320515d / contribution b87d18b1f927486b30094f4ecafaa2a92de8e0ce passed preflight but failed its repeated release gate on macOS Node owner-open EINVAL. Its tag is retained unpublished. 0.3.6 removes the incorrect Bun-only guard, retaining exact-path/syscall/deadline and ownership checks; concurrently committed English model-facing prompts are preserved. This report follows the [failed 0.3.4 live acceptance](NPM-LIVE-0.3.4.md); it does not replace or erase that failure.
 
 ## Changes and existing checks
@@ -14,6 +16,12 @@ The existing checks now include a shared daily ID containing unrelated content, 
 - [0.3.5 repeated release verification](https://github.com/risense-ai/respire-magpie/actions/runs/41201489206): failed on macOS owner-open EINVAL; no npm publication or release assets.
 - [Supplemental community validation at the 0.3.5 contribution head](https://github.com/risense-ai/respire-magpie/actions/runs/41201381216): PASS; does not replace community workflow approval.
 
+Final 0.3.6 evidence supersedes those candidates:
+
+- [Three-OS preflight at b241141](https://github.com/risense-ai/respire-magpie/actions/runs/41202128290): PASS, Windows/Linux/macOS, Node 24 and Bun 1.3.6.
+- [Repeated release verification, GitHub Release and npm OIDC](https://github.com/risense-ai/respire-magpie/actions/runs/41202277989): all PASS. Provenance [transparency entry](https://search.sigstore.dev/?logIndex=3614005576).
+- [Exact contribution 7aba754 full community validation](https://github.com/risense-ai/respire-magpie/actions/runs/41202129801): 4193 pass, 3 skip, 0 fail; 4196 tests/328 files. Root checks and package dry-run pass. This does not replace maintainer approval of community CI.
+
 A local earlier run exposed Windows EBUSY/unlink on the exact legacy PID-file lock path. The narrow repair waits within the existing deadline and re-probes ownership. A later raw-capture fixture initially created its control before its job timestamp and correctly expired; the fixture now uses one acceptance timestamp, without relaxing production lease checks. Both failures are retained in the repair history.
 
 ## Real Runtime candidate probes
@@ -22,9 +30,22 @@ Before publication, the new helper wrote a short process diary through the exist
 
 ## npm/native-host acceptance
 
-Pending at this report checkpoint. The intended acceptance uses Magpie's own npm installer in a separate XDG configuration/cache, the existing Runtime and a credential-free forwarding provider through the existing gateway/model. Loopback observers forward actual responses and record only safe request/receipt metadata. Normal and independent recall turns must return the previously stored test values and exact actual record ID, without including expected values in the user question. An ordinary follow-up must write and exactly verify its own process diary without creating a new long-term conclusion.
+Magpie's own installer updated the public npm package in a separate XDG configuration/cache. The existing Runtime and a credential-free forwarding provider reused the existing local gateway/model, workbuddy-ai/deepseek-v4.1-flash. No private provider credentials were read/copied, no Runtime/account lifecycle change was performed, and raw capture stayed off. Loopback observers forwarded actual responses and saved safe request/receipt metadata rather than private policy/history content.
 
-The user explicitly authorized enabling automatic reads/writes for all eligible main-gateway conversations after isolated acceptance. The final main-gateway state and actual smoke result will be recorded only after execution.
+A separate public npm install followed by npm audit signatures verified **one registry signature and one provenance attestation**. All **29** packaged files in both the isolated native installation and final main installation matched raw v0.3.6 Git blobs byte-for-byte.
+
+| Real native probe | Observed result |
+| --- | --- |
+| R: independent recall | Returned the previously stored test colour, number and exact actual record ID; the question did not include expected values. Automatic process diary completed with exact fragment readback, 6 logical restricted calls |
+| S: ordinary follow-up | Returned 收到。; no new long-term fact was written. This turn's process diary completed with exact fragment readback, 5 logical restricted calls |
+| T: fresh conversation | Independently returned the same correct values and actual ID; its own process diary completed with exact fragment readback, 8 logical restricted calls |
+| Complete policy/read gate | All three forwarded foreground requests contained the exact complete real Runtime policy, **44,429 bytes**, SHA-256 bb406353ee294e2793c08c50396aeadca89d7a62aab656e260392d9615ed5fc9. Each new turn had actual recall/prompt reads. The two-turn R/S history contained one full policy block, not two |
+| Background policy | All 15 observed archival model requests carried the same complete policy in the actual startup/tool payload |
+| Diary disclosure/readback | No whole daily-source show occurred. All three jobs used bounded search/fragment reads, verified the exact full written body and source/version/Unicode ranges, and passed only the current body and full locators to the model. The observed bodies were 184, 120 and 186 Unicode characters, with two locators each |
+
+The main installation then replaced the old local-directory record with **@rsrsai/magpie@latest**, resolved to 0.3.6, and was enabled. Original options were preserved except removal of dead injectRules; the other three plugin records were unchanged. A direct main-gateway request returned HTTP 200 and 验收收到。; its automatic diary completed with exact fragment verification, 7 logical restricted calls. The main turn's durable context also contained the exact full 44,429-byte policy returned by an independent Runtime prompt read.
+
+Scripts, source/job IDs, locators, responses and assertions remain private in ignored .verification/npm-live under the user-migrated repository. The main gateway stays enabled as explicitly requested. Only the temporary verification native host and observers were stopped. These are maintainer observations of a private installation; public CI and provenance are independently inspectable.
 
 ## Remaining boundaries
 

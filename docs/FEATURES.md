@@ -26,7 +26,7 @@ This feedback loop changes reusable memory, not model weights. Readback confirms
 | Read-only and caller control | Local/magpie-key only; explicit readOnly and engine restrictions remain authoritative | Shared-key fixture rejection checked; old host magpie-key classification remains limited |
 | Optional raw capture | Trivial raw turn diary when explicitly enabled | Default off; distinct from model-produced process diary; no live raw-capture acceptance claimed |
 | Settings and status | Settings page, Memory/Used/prior-save hints, adaptive local light/dark icon | v0.2.1 actual Magpie web rendering inspected; hints depend on the answering model |
-| Delivery | Three-OS Node/Bun checks, tagged GitHub Release and verified npm OIDC publication/install | Public package @rsrsai/magpie; see [0.3.3 publication acceptance](NPM-PUBLISH-0.3.3.md). Community registry delivery still requires maintainer merge |
+| Delivery | Three-OS Node/Bun checks, tagged GitHub Release and verified npm OIDC publication/install | Public package @rsrsai/magpie; see [0.3.6 real npm/native acceptance](NPM-LIVE-0.3.6.md) and [historical 0.3.3 publication acceptance](NPM-PUBLISH-0.3.3.md). Community delivery still requires maintainer merge |
 
 ## Strict requirements that remain unmet
 
