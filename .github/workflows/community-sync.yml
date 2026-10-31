@@ -186,7 +186,7 @@ jobs:
             [[ "$(gh pr view "$PR" --repo "$COMMUNITY" --json state --jq .state)" == OPEN ]]
           fi
           if [[ -z "$PR" ]]; then
-            closed=$(gh pr list --repo "$COMMUNITY" --head "${FORK%%/*}:$BRANCH" --state closed --json number --jq length)
+            closed=$(gh pr list --repo "$COMMUNITY" --head "$BRANCH" --author "${FORK%%/*}" --state closed --json number --jq length)
             [[ "$closed" == 0 ]] || { echo '::error::A closed PR for this branch requires human review.'; exit 1; }
           fi
           gh auth setup-git --hostname github.com
