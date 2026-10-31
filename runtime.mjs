@@ -1,10 +1,18 @@
 import { randomUUID } from 'node:crypto';
+import { isAbsolute } from 'node:path';
 
 export const STORE_PREFIX = /^(?:记|存|记录|记住|remember)\s*[:：]\s*/i;
 export const SKIP_PREFIX = /^(?:\/nomem|#nomem)(?=\s|$)/i;
 export const bytes = text => Buffer.byteLength(text, 'utf8');
 export const validId = id => typeof id === 'string' && /^[a-f\d]{8}(?:-[a-f\d]{4}){3}-[a-f\d]{12}$/i.test(id);
 export const containsSecret = text => /-----BEGIN (?:[A-Z]+ )?PRIVATE KEY-----|\b(?:sk-|gh[pousr]_|github_pat_|xox[baprs]-)[A-Za-z0-9_-]{12,}|\b(?:sk|rk)_live_[A-Za-z0-9]{8,}|\bAIza[0-9A-Za-z_-]{35}\b|\bAKIA[0-9A-Z]{16}\b|\bBearer\s+[A-Za-z0-9._~+/=-]{8,}|\b[a-z][a-z0-9+.-]*:\/\/[^\s/?#@]+:[^\s/?#@]+@|(?:[\w-]*(?:pass(?:word|wd)|pwd|api[_ -]?key|access[_ -]?key|token|authorization|secret|private[_ -]?key)|密码|口令|私钥)["']?\s*[:=：]\s*\S+/iu.test(text);
+
+export function hasSecret(value) {
+  if (typeof value === 'string') return containsSecret(value);
+  if (Array.isArray(value)) return value.some(hasSecret);
+  return value && typeof value === 'object' ? Object.entries(value).some(([key, item]) =>
+    containsSecret(`${key}: ${typeof item === 'string' ? item : '[value]'}`) || hasSecret(item)) : false;
+}
 
 export class Failure extends Error {
   constructor(code) { super(`Respire ${code}`); this.code = code; }
@@ -16,12 +24,24 @@ export function options(raw = {}) {
   if (!['http:', 'https:'].includes(url.protocol) || !['127.0.0.1', '[::1]'].includes(url.hostname) ||
       url.href.includes('@') || url.search || url.hash || url.pathname !== '/') throw new Failure('invalid');
   const o = { url: url.href, project: raw.project ?? '', timeout: raw.requestTimeoutMs ?? 1500,
-    maxBytes: raw.maxBytes ?? 8000, limit: raw.limit ?? 3, remember: raw.remember ?? true, capture: raw.capture ?? false };
+    maxBytes: raw.maxBytes ?? 8000, limit: raw.limit ?? 3, remember: raw.remember ?? true, capture: raw.capture ?? false,
+    readOnly: raw.readOnly ?? false, archive: raw.archive ?? false, showMemoryStatus: raw.showMemoryStatus ?? true,
+    injectRules: raw.injectRules ?? true, stateDir: raw.stateDir ?? '', generationBaseUrl: raw.generationBaseUrl ?? '',
+    generationModel: raw.generationModel ?? '', authorizationEnv: raw.authorizationEnv ?? 'RESPIRE_MAGPIE_AUTHORIZATION' };
   if (typeof o.project !== 'string' || o.project.length > 256 || /[\x00-\x1f\x7f]/.test(o.project) ||
       typeof o.remember !== 'boolean' || typeof o.capture !== 'boolean' ||
       !Number.isInteger(o.timeout) || o.timeout < 100 || o.timeout > 5000 ||
       !Number.isInteger(o.maxBytes) || o.maxBytes < 1024 || o.maxBytes > 32768 ||
       !Number.isInteger(o.limit) || o.limit < 1 || o.limit > 5) throw new Failure('invalid');
+  for (const key of ['readOnly', 'archive', 'showMemoryStatus', 'injectRules']) if (typeof o[key] !== 'boolean') throw new Failure('invalid');
+  for (const key of ['stateDir', 'generationBaseUrl', 'generationModel', 'authorizationEnv']) if (typeof o[key] !== 'string' || o[key].length > 2048 || /[\x00-\x1f\x7f]/.test(o[key])) throw new Failure('invalid');
+  if (o.stateDir && !isAbsolute(o.stateDir)) throw new Failure('invalid');
+  if (!/^[A-Za-z_][A-Za-z0-9_]*$/.test(o.authorizationEnv)) throw new Failure('invalid');
+  if (o.generationBaseUrl) {
+    const generation = new URL(o.generationBaseUrl);
+    if (generation.href.includes('@') || generation.search || generation.hash || !(generation.protocol === 'https:' ||
+        generation.protocol === 'http:' && ['127.0.0.1', '[::1]'].includes(generation.hostname))) throw new Failure('invalid');
+  }
   return o;
 }
 

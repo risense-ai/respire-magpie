@@ -1,2 +1,4 @@
 node_modules/
 *.tgz
+.verification/
+SHA256SUMS

@@ -1,55 +1,44 @@
 # Respire for Magpie
 
-<p align="center">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="page/icon-respire-ai-memory.svg">
-    <img src="page/icon-respire-ai-memory-light.svg" width="112" height="112" alt="Respire AI 记忆">
-  </picture>
-</p>
+<p align="center"><picture><source media="(prefers-color-scheme: dark)" srcset="page/icon-respire-ai-memory.svg"><img src="page/icon-respire-ai-memory-light.svg" width="112" height="112" alt="Respire AI 记忆"></picture></p>
 
-Magpie 网关记忆插件。自动读取 Respire 记忆正文，支持显式存储，以及默认关闭的对话日记采集。复用已有 Respire Runtime，无运行时 npm 依赖。
+通过 Magpie 为客户端提供 Respire 记忆。**0.2.0** 支持自动召回正文、显式存储、会话规则、后台提炼与查重归档、大回合分段、证据回读、持久去重，以及只读和显示偏好。
 
-**当前为 0.1.0 本地开发版，尚未发布到 npm。它没有完整对齐 Respire Codex 插件，尤其不包含后台模型提炼。**
+后台整理默认关闭，需要明确配置生成模型。没有生成服务也能使用基础召回和显式存储。网关不会取得或复用客户端私有登录凭据，也不会注册或执行客户端工具。
 
-## 让 AI 安装：复制这段提示词
+[GitHub Releases](https://github.com/risense-ai/respire-magpie/releases) 提供分发包与 SHA256SUMS。npm 首发按用户决定暂缓，**不要假定 @rsrsai/magpie 已可从 npm 安装**。
 
-把下面整段发给本地助手，并将目录替换为你实际保存本插件的位置：
+## 让 AI 安装
+
+复制给本地助手，并替换目录：
 
 ```text
-请安装本地 Respire Magpie 插件，目录为 D:\sources\repos-new\gh\1memory\respire-magpie。
-先阅读该目录 README.md，检查 Magpie 版本、Bun 和 rsrs --client-only status --json。
-复用现有 Respire 环境，不安装、启动或升级 Runtime，不索取密码或其他凭据。
-保留现有账号、记忆库、配置和无关插件。先检查 magpie plugin list --json，避免重复安装。
-尚未安装时执行 magpie plugin add <完整插件目录>，不要只安装 respire.hooks.mjs。
-在插件页面配置实际 Runtime 地址和项目；保持 capture=false，除非我明确允许采集对话。
-不要把尚未发布的 @rsrsai/magpie 当成 npm 可安装包，也不要自行升级 Magpie。
-用无敏感内容的问题验证召回。存储验证先取得我对测试事实的授权，再核对实际记录。
-报告实际执行结果和未验证项，不能把保存配置当成连接成功或完整验收。
+请安装 D:\sources\repos-new\gh\1memory\respire-magpie 中的 Respire Magpie 插件。
+先读 README.md，检查 Magpie、Bun 和 rsrs --client-only status --json。
+复用现有 Respire 账号、模型和 Runtime；不自行安装、启动或升级 Runtime，不索取凭据。
+检查 magpie plugin list --json，避免重复；尚未安装时执行 magpie plugin add <完整目录>。
+安装整个目录，不只安装 respire.hooks.mjs。保留无关插件和配置，不自行升级 Magpie。
+在插件页面配置实际 Runtime 与项目。capture 和 archive 保持关闭，除非我明确允许采集或后台处理。
+如启用 archive，说明发送的消息、工具结果和相关记忆、额外模型用量及本地状态存储。
+在我自己的终端环境配置密钥；页面仅填写环境变量名称，不接收密钥。
+先用无敏感问题验证召回。写入验收先取得我对测试事实的授权，再读取实际记录。
+报告实际执行及未验项目，不能把保存配置、模拟检查或成功回执当作完整部署验收。
 ```
 
-## 准备与安装
+## 安装
 
-需要 Bun 1.3.6+、已就绪的 Respire HTTP Runtime，以及支持异步 Hook 的 Magpie **0.1.1273+**。推荐 **0.1.2208+**，以识别本机 Agent 的 `magpie-key` 来源；旧版将此来源归为 `gateway-key`，本插件会跳过，不放宽权限。页面配置在 0.1.1531+ 热更新，更早版本需重启 Magpie。本插件不安装、启动、升级服务，不管理账号或接收凭据。
-
-先通过 rsrs 自身流程登录、解锁记忆库并准备模型，再执行：
+需要 Magpie **0.1.1273+** 和 Bun **1.3.6+**，Respire HTTP Runtime 必须已运行并解锁。推荐 Magpie **0.1.2208+**，以正确识别本机 Agent 的 magpie-key 来源；旧版对此来源可能跳过。页面配置热更新需要 **0.1.1531+**，更早版本需重启 Magpie。
 
 ```powershell
 rsrs --client-only status --json
 magpie plugin add D:\sources\repos-new\gh\1memory\respire-magpie
 ```
 
-请安装整个目录，以保留 package.json 中的配置页面、默认选项和同目录模块。需要生成分发包时执行：
+也可在完整插件目录执行 `magpie plugin add .`。本地安装引用此目录，不要移动或删除它。可检出仓库，也可解压 Release tgz 后安装其中的 package 目录。目录必须包含 package.json 和全部运行模块。
 
-```powershell
-cd D:\sources\repos-new\gh\1memory\respire-magpie
-npm pack
-```
+在 Respire 插件页面配置 Runtime、项目和开关。页面只保存配置，不检测连接或模型。原生 `magpie plugin options <标识>` 也可修改；本地安装的实际标识请先通过插件列表确认。
 
-本包尚未发布到 npm；开发时使用上面的目录安装。不要执行 `magpie plugin add @rsrsai/magpie` 并假定它已经发布。
-
-其他系统可在插件目录执行 `magpie plugin add .`，请先确认当前目录含本包 package.json。本地路径安装引用该目录；安装后不要移动或删除它。目录打包不会自动注册插件。
-
-安装后打开 Respire 插件页面，配置 Runtime 地址、项目与采集开关。页面只保存配置，不检测连接。原生 Options 也可使用以下配置；在 `magpie plugin options <插件标识>` 中先确认实际标识，本地路径安装时不要直接假设标识是 npm 包名：
+## 配置
 
 ```json
 {
@@ -60,84 +49,115 @@ npm pack
   "maxBytes": 8000,
   "limit": 3,
   "remember": true,
-  "capture": false
+  "readOnly": false,
+  "injectRules": true,
+  "showMemoryStatus": true,
+  "capture": false,
+  "archive": false,
+  "generationBaseUrl": "",
+  "generationModel": "",
+  "authorizationEnv": "RESPIRE_MAGPIE_AUTHORIZATION",
+  "stateDir": ""
 }
 ```
 
-| 选项 | 默认值 | 作用与范围 |
-| --- | --- | --- |
-| `runtimeUrl` | `http://127.0.0.1:15169` | 已运行的本地 Runtime，只接受 `127.0.0.1` 或 `[::1]`，协议为 HTTP/HTTPS，不带路径、凭据或查询参数。 |
-| `project` | 空字符串 | 非空时按现有项目名过滤召回并标注写入；不是权限或账号边界。 |
-| `gatewayTimeoutMs` | `5000` | Magpie 控制整个 Hook 的超时，宿主允许范围为 100–10000 毫秒；多个 Hook 共享总预算。 |
-| `requestTimeoutMs` | `1500` | 每个 Runtime 请求含响应读取的超时，100–5000 毫秒。 |
-| `maxBytes` | `8000` | 单轮注入块的 UTF-8 字节预算，1024–32768。 |
-| `limit` | `3` | 召回候选条数，1–5；最终注入可能因预算或敏感内容而更少。 |
-| `remember` | `true` | 是否处理存储前缀；关闭不会阻止客户端自行调用其他记忆工具。 |
-| `capture` | `false` | 是否将完成回合采集为 trivial 日记。 |
-
-## 与 Codex 插件的差异及可实现性
-
-下表区分当前实现与未来可做的工作，不是功能完成清单。
-
-| 功能 | Magpie 0.1.0 现状 | 能否补齐、需要什么 |
-| --- | --- | --- |
-| 自动召回 | 已支持，直接注入正文 | 已具备；Codex 是先注入标题、再由助手按需读正文。 |
-| 显式存储及待决回执 | 已支持 | 已具备；pending 仍需客户端工具或后续后台任务处理，当前不会自动完成挂靠。 |
-| 会话规则、引擎状态检查 | 只有历史资料提示 | 可在首次观察某会话时补规则与检查；网关没有 Codex 的 SessionStart 事件，不能把首次看到请求等同于真实会话开始、恢复或压缩。 |
-| 后台提炼新结论 | 未实现；capture 只保存原始日记 | 可做，但需另行配置生成模型或明确使用某个宿主的后台任务接口，不能取得或复用网关客户端的私有登录凭据。 |
-| 查重、更新或挂靠、写后回读 | 显式存储只走引擎首次判重 | 可在后台 worker 中实现，须保留候选与原始来源，限制写入操作，处理 pending 和未知回执；不能直接复制 Codex app-server 专用代码。 |
-| 大回合分段与证据回读 | 不提炼；超过 64 KiB 的采集跳过 | 可在后台 worker 中做有预算的分段与源证据读取；只处理网关实际收到的内容，无法恢复客户端未发送的历史。 |
-| 持久去重、归档进度 | 仅有内存缓存 | 可增加本地状态存储及原子写入；已入队任务可跨重启保留，但宿主在入队前丢失完成通知的问题仍存在。 |
-| Memory、Used、保存状态与显示偏好 | 未实现 | 可增加提示和配置；Used 仍须由实际使用资料的模型报告，网关不能独立证明模型采用了哪条记忆。原生界面状态行需要宿主支持，不能由 Hook 保证展示。 |
-| plan 模式禁写 | 不识别客户端 plan 模式 | 当前 Hook 契约没有可信 `permission_mode` 字段，无法通用自动识别。可补插件只读开关；要自动对齐需宿主传递可信模式，不能靠用户文字猜测权限。 |
-| Codex setup/settings 技能 | 没有；提供 Magpie 配置页 | 配置需求可通过页面实现；Codex 专用技能与生命周期不能在纯网关插件中原样运行。 |
-
-因此，大部分记忆处理能力可以通过“网关接入 + 独立后台处理”实现，但 Codex 的会话事件、权限模式和界面行为受各自宿主限制。建议后续先明确后台模型和状态存储，再补提炼、查重与回读；最后处理分段、进度和显示偏好。本次文档更新没有实现这些后续能力。
-
-**当前使用 plan 模式时，不要依赖本插件自动禁写。** 若要求本插件不写入，请将 `remember` 和 `capture` 都设为 `false`，或通过 Respire 自身的只读模式控制；客户端其他工具的权限仍由其宿主管理。
-
-## 行为
-
-- 使用异步 `magpie.hooks`。支持 Chat Completions、Responses、Anthropic Messages 和 Gemini，保留模型、流式设置与客户端工具定义。
-- 只处理宿主标记的 `local` 和 `magpie-key`。远程、其他具名网关密钥、代理请求与未知来源全部跳过，不能通过参数开启。
-- 仅连接字面回环地址 `127.0.0.1` / `[::1]` 的 `/api/rpc`，不接受远程服务、DNS 名、URL 凭据或重定向。不会调用 CLI 或启动模型、Runtime。
-- `project` 是可选的现有 Respire 项目过滤器。留空召回当前库所有项目；填写后召回与写入均传该项目，并复核读取结果。它不是账号、记忆库或访问控制隔离。`cwd` 与 `session` 只参与缓存隔离，不自动推导项目。
-- 默认召回最多 3 条，使用 `recall --titles --json` 选候选，再 `show` 读取正文；被取代的条目优先读取新条。整条证据放不进字节预算时跳过，不截成可能改变含义的片段。分数不作为可信度。
-- 记忆以 JSON 历史参考附到用户消息，转义标签边界；不作为系统指令。历史轮次重放原有块，减少提示词缓存变化。缓存最多 512 轮、8 MiB；重启或淘汰后可重新召回。
-- `记：`、`存：`、`记录：`、`记住：`、`remember:` 开头的消息在 `remember: true` 时尝试写入 important，先经过引擎判重，不使用 `--force`。pending 代表未落库，需通过客户端已有的 Respire CLI/MCP 读候选并完成更新或挂靠。超时代表结果未知，可能已提交，不能盲目重试。
-- `/nomem` 或 `#nomem` 跳过本条自动召回与采集。不会注册模型工具；显式搜索、修订、删除仍由客户端现有的 Respire CLI/MCP 完成。
-- 连接失败、无效响应或超时不阻断推理。诊断只报固定状态码与字节数，不打印服务错误正文或记忆内容。
-
-## 可选对话采集
-
-默认 `capture: false`。开启后，每轮完整结束的用户消息、客户端工具调用与结果、助手最终回复保存为 **trivial 日记**，携带源摘要；不会自动生成 important，也不另配提炼模型。
-
-文件内容与命令输出可能出现在工具结果里，并按 Respire 现有配置加密和同步。开启前确认这些内容允许保存。疑似凭据会跳过整轮；扫描只是尽力检查，不能识别任意自然语言秘密。
-
-采集跳过失败、截断、未完成工具调用、仅含工具结果的请求、`previous_response_id` 历史续接，以及超过 64 KiB 的单轮。仅包含文本与结构化工具记录，不保存图片、音频或模型私有推理。
-
-宿主通知及本插件去重均在内存中，退出会丢失，缓存淘汰或重启后可能重复，不保证持久投递或恰好一次。未知写入不重试。可靠后台提炼与持久队列未包含在此版本。
-
-## 排查
-
-| 现象 | 检查方式 |
+| 选项 | 说明 |
 | --- | --- |
-| 安装成功却没有记忆 | 先执行 `rsrs --client-only status --json`，确认账号、解锁、模型与 Runtime；再检查 Magpie 插件诊断。不要通过放宽来源限制解决。 |
-| 本机 Agent 也被跳过 | Magpie 0.1.2208 前可能将本机共享密钥归为 `gateway-key`；升级宿主后另行验收，或使用宿主可识别的直接本机请求。 |
-| 地址被拒绝 | 使用真实的字面回环地址；`localhost`、远程地址和带路径的 URL 不被接受。 |
-| 返回 pending | 尚未写入，需读取候选并选择更新或挂靠；不要反复发送或强制保存。 |
-| 存储超时或没有有效回执 | 可能已经写入；先通过 Respire 查库，禁止自动重放。 |
-| 召回少于 limit | 检查项目过滤、字节预算和内容是否触发敏感检查；候选数量不等于注入数量或资料可信度。 |
-| 采集没有形成长期记忆 | 当前采集只写日记；后台模型提炼尚未实现。失败、不完整、含疑似凭据或过大的回合会跳过。 |
+| runtimeUrl | 仅字面回环 127.0.0.1 / [::1] 的 HTTP/HTTPS，不接受路径、URL 凭据、查询参数、DNS 名或远程服务。 |
+| project | 非空时过滤召回、标注新写入并限制后台更新目标；留空可使用当前整个库。不是权限或账号边界。 |
+| gatewayTimeoutMs | 宿主 Hook 超时，100–10000 毫秒；整个链另有总预算。后台模型处理不占用这段预算。 |
+| requestTimeoutMs | 前台每个 Runtime 请求含正文读取的预算，100–5000 毫秒。 |
+| maxBytes | 注入块 UTF-8 字节上限，1024–32768。首次规则占此预算，不足以完整放入时报告 invalid，不静默删减。 |
+| limit | 候选 1–5 条，默认 3；超预算或含疑似凭据的正文跳过。 |
+| remember | 处理“记：”“存：”“记录：”“记住：”“remember:”前缀，默认开启。 |
+| readOnly | 禁止本插件显式存储、采集及后台写入，不限制其他客户端工具。 |
+| injectRules | 首次观察会话时注入 Respire 规则并检查 Runtime，默认开启。 |
+| showMemoryStatus | 提供 Memory、Used 及上次归档状态提示，默认开启；不能保证客户端显示，严格格式应省略标签。 |
+| capture | 完成回合原始文字与工具记录保存为 trivial 日记，默认关闭。 |
+| archive | 用独立模型提炼、查重、更新或挂靠并验证回执，默认关闭。 |
+| generationBaseUrl | 兼容 Chat Completions 的基础地址，如 https://provider.example/v1；插件追加 /chat/completions。远程须 HTTPS，回环可 HTTP，不跟随重定向。 |
+| generationModel | 服务实际支持的模型名，启用 archive 时须填写。 |
+| authorizationEnv | 凭据所在环境变量名称，默认 RESPIRE_MAGPIE_AUTHORIZATION。无认证服务可不设置变量。 |
+| stateDir | 可选绝对路径，默认用户目录 .rsrs/magpie；加密保存去重状态、队列、证据、进度和结果。 |
 
-## 图标
+生成凭据由用户在 Magpie 启动环境中设置。配置只保存变量名；密钥不进模型上下文、队列或状态日志。启用 archive 意味着允许将本轮消息、工具内容和相关记忆发给该服务，并产生额外模型用量。
 
-亮暗图标取自项目 `icon/` 的 `icon-respire-ai-memory-light.svg` 与 `icon-respire-ai-memory.svg`，原样副本随包放在 `page/`。
-配置页按 Magpie 官方 bridge 设置的 `data-theme` 切换两版；README 用 picture 切换。插件列表图标通过 `magpie.icon` 内嵌自适应 SVG data URI，侧栏使用 `magpie.page.icon` 指向 `page/icon.svg`，无需外网加载图标。
-单文件沿用 Respire DSH 中由同一对源图组成的版本；其媒体查询跟随宿主传给图像的配色方案。Magpie 显式主题与系统主题不同时，插件列表和侧栏的实际切换仍需宿主验收，不能以网页测试代替。
+## 记忆流程
 
-## 验证与来源
+1. 只接受宿主标记的 local 或 magpie-key。远程、其他具名密钥、代理和未知来源全部跳过。
+2. 核对当前 Runtime 账号与库，并隔离缓存和任务；不能确认账号或未解锁时继续原推理，报告不可用。
+3. recall 选标题后 show 正文，被取代的条目优先读新条。资料作为不可信历史参考注入，保留完整标识与正文，放不进预算就跳过整条。
+4. 显式存储只尝试一次，不 force。pending 是未写入；未知回执可能已经写入，不能自动重试。启用 archive 后可在回复完成时处理 pending；成功或未确认的显式写入不重复启动归档。
+5. 完成回复后，将任务写入加密队列，再启动独立 worker。失败、截断、工具未完成、疑似凭据或缺失历史的回合不入队。
+6. worker 复核当前账号、插件控制记录和引擎模式，再做可选日记采集及模型归档。模型只有受限记忆与本轮证据工具，不能调用 Shell、任意网络工具、凭据、配置或服务生命周期操作。
+7. 归档先召回、读完整政策和候选，优先更新，或挂到已读 parent；写后读回实际记录。长期结论附本轮来源标识，原始证据可通过 CLI 精确读回。
+8. 下一条请求可提示上次归档状态。Used 仍由实际采用资料的模型报告，不是网关独立测量；回读成功只证明落库，不证明正文真实。
 
-使用语法检查、内联断言和模拟 HTTP Runtime 验证，并已通过真实 Runtime 的只读 recall/show 检查；未向真实记忆库写入测试数据。完整 Magpie 安装与 UI 验收须单独执行，不能用模拟检查代替。本机 Magpie 0.1.1908 早于 `magpie-key` 来源分类，未为本插件升级宿主。
+`/nomem`、`#nomem` 只跳过本条召回；后台仍可按用户已启用的 capture/archive 运行，与 Codex 插件语义一致。要禁止本插件写入，请打开 readOnly，或关闭 remember、capture、archive。引擎的只读、暂停和权限规则始终有效。
 
-参考 [Magpie Hook 契约](https://github.com/yetone/magpie/blob/main/docs/subsystems/gateway-request-hooks.md) 与 [PowerContext 插件](https://github.com/magpie-community/plugins/tree/main/packages/powercontext)。对话解析器改自其 MIT 实现，归属与上游版本见 NOTICE。
+## 大回合、来源与恢复
+
+原始回合最多 2 MiB。归档复用 Codex 的证据处理：直接预算 256,000 字符；超预算才缩短工具预览，用户和助手原文不裁剪；仍超预算按最多 48,000 字符分段，最多 12 段，每段最多 6,000 字符候选。候选必须引用真实来源，不能视为独立验证。
+
+最终归档收到或回读全部用户原文后，才允许写入或成功结束。工具中段仍可通过证据工具读取。模型交互最多 40 轮，总预算 280 秒，单次生成最多 60 秒。超限或失败标为 unconfirmed，不假装完成。
+
+状态目录使用 AES-256-GCM 加密记录并原子替换文件；state.key 同目录保存，只保护未同时取得密钥的离线记录，不等同于系统密钥链或 Respire 库的加密。应保护和备份整个目录。来源证据随任务保留，最多 512 个队列记录；满额拒绝新入队，不自动删除证据。
+
+在完整插件目录，用 Node.js 24+ 或对应 Bun 解释器运行：
+
+```powershell
+node worker.mjs setup
+node worker.mjs status
+node worker.mjs run
+node worker.mjs recover
+node worker.mjs evidence <完整回合来源摘要>
+```
+
+setup 检查默认 Runtime、模式及状态目录，不发模型请求或安装引擎。status 显示安全进度、回执 ID 和错误类别。run 处理队列，正常后续请求也会唤醒队列。recover 只在原 worker 已死亡时清理进程锁：未尝试写入的中断任务重新入队，曾尝试写入的标为 unconfirmed，绝不重放。
+
+自定义目录时，setup/status/run/recover 的第二个参数为绝对目录；evidence 的第二个参数是来源摘要，第三个参数是目录。evidence 会输出原始内容，应只在获准查看的终端运行。遗留回合记录锁不会自动删除，应先核实写入结果，不要删状态绕过未知回执。
+
+持久队列不能弥补宿主入队前丢失完成通知。当前版本跳过 Responses previous_response_id 的历史续接，不伪造未观察到的完整历史。图片、音频和私有推理不保存。
+
+## 与 Codex 的对齐及宿主限制
+
+| 能力 | 当前状态 |
+| --- | --- |
+| 自动召回、显式存储、待决与未知回执 | 已实现；自动注入正文而非只注入标题。 |
+| 规则与引擎检查 | 首次观察会话时执行；没有真实 SessionStart/恢复/压缩事件。 |
+| 后台提炼、查重、更新/挂靠和回读 | 已实现独立 worker，另配生成服务，不依赖 Codex app-server。 |
+| 分段、证据读取与成功出口校验 | 已实现并保留来源。 |
+| 持久去重、进度、未知写入不重放 | 已实现；不弥补入队前的通知丢失。 |
+| 状态显示偏好 | 已实现提示与配置；Hook 不能改写已发送回复或保证原生 UI 状态行。 |
+| plan 禁写 | 提供 readOnly 开关；当前宿主没有可信 permission_mode，无法自动识别客户端 plan，不能根据用户文字猜授权。 |
+| setup/settings | 提供本地 setup 命令和配置页面，不是 Codex 专用技能。 |
+
+开关在下一条请求同步给 worker；已接受的写入不能撤销。切换生成服务、模型或项目后，应先查看旧任务状态，不把配置保存当成旧任务已取消。
+
+## CI/CD 与发布
+
+- main 与 PR 运行 Windows、Linux、macOS 检查，覆盖四协议、HTTP 模拟服务、独立 worker、受限工具、加密状态、只读、未知写入及分段来源。
+- 推送 v<package.version> 标签触发三系统验证，通过后自动上传 tgz 与 SHA256SUMS 到 GitHub Release；预发布标签标为 prerelease。
+- npm job 已配置 OIDC 和 provenance，当前默认跳过。按用户决定，npm 首发及可信发布绑定稍后处理。
+- npm 就绪后，可信发布绑定 risense-ai/respire-magpie 的 release.yml 并允许直接 publish，再设仓库变量 NPM_PUBLISH_ENABLED=true。不上传长效 token。稳定版使用 latest，含连字符版本使用 next。
+- npm run check 做检查；npm run release:package 打包和生成校验，发布环境还校验标签与版本一致。
+
+## 排查与验收状态
+
+| 现象 | 处理 |
+| --- | --- |
+| 来源跳过 | 检查宿主版本与来源分类，不放宽到共享网关的其他调用者。 |
+| invalid | 检查配置、预算和响应格式；启用规则时须容纳完整规则。 |
+| worker 不处理 | 查看 status 和进程锁，确认原进程已死亡才 recover。 |
+| generation-not-configured/unavailable | 配置服务、模型及 Magpie 启动环境中的凭据变量，不向聊天发送密钥。 |
+| unconfirmed | 先读取 records 和实际记忆，不能直接重放曾尝试写入的任务。 |
+| account-changed、read-only、job-disabled | 账号、权限或开关改变，任务停止，不扩大权限。 |
+| 加密状态或锁报错 | 保留目录排查，不自动删密钥、密文或锁绕过失败。 |
+
+检查使用隔离目录、HTTP 模拟 Runtime/生成服务及真实独立 worker，不向生产记忆库写测试事实。真实 Runtime 的基础只读召回已验证；完整 Magpie UI、用户实际生成服务和生产写入仍须单独验收。本机 Magpie 0.1.1908，未自动升级。
+
+## 图标与来源
+
+亮暗 SVG 取自项目 icon/，副本在 page/。配置页跟随官方 bridge 的 data-theme，README 用 picture。插件列表内嵌自适应 SVG data URI，侧栏使用 page/icon.svg，无需外网。单文件复用同源 DSH 组合；宿主显式主题与系统主题不同时的实际显示仍需验收。
+
+参考 [Magpie Hook 契约](https://github.com/yetone/magpie/blob/main/docs/subsystems/gateway-request-hooks.md) 和 [PowerContext 插件](https://github.com/magpie-community/plugins/tree/main/packages/powercontext)。对话解析器为 MIT 改编；证据处理和受限工具复用 Respire Codex。见 NOTICE 和 LICENSE。

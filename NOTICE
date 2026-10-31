@@ -8,3 +8,7 @@ Respire-specific integration and configuration: Copyright (c) 2026 Respire contr
 
 Respire icons originate from the 1memory/icon directory. The adaptive page/icon.svg
 reuses the Respire DSH composition of the same light and dark source images.
+
+archive-context.mjs, memory-tools.mjs and policy.mjs reuse Respire Codex's
+evidence preparation, restricted memory tools and memory policy respectively.
+https://github.com/risense-ai/respire-codex
