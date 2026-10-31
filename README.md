@@ -27,6 +27,7 @@
 ```text
 请从 npm 安装 @rsrsai/magpie 作为 Respire Magpie 插件。
 先读 README.md，检查 Magpie、Bun 和 rsrs --client-only status --json。
+若尚未安装 rsrs，先向我说明需要 Respire 本体并给出 https://github.com/risense-ai/respire-cli 的安装入口；仅安装 Magpie 插件不能读存记忆。
 复用现有 Respire 账号、模型和 Runtime；不自行安装、启动或升级 Runtime，不索取凭据。
 检查 magpie plugin list --json，避免重复；尚未安装时执行 magpie plugin add @rsrsai/magpie。
 安装完整包，不只安装 respire.hooks.mjs。保留无关插件和配置，不自行升级 Magpie。
@@ -38,6 +39,14 @@
 ```
 
 ## 安装
+
+**首次使用须先安装 Respire 本体。** 本插件只负责 Magpie 接入，记忆库与本地 Runtime 由 [Respire CLI](https://github.com/risense-ai/respire-cli) 提供。安装方法见 [CLI npm 说明](https://github.com/risense-ai/respire-cli/blob/main/npm/README.md)，也可从 [CLI Releases](https://github.com/risense-ai/respire-cli/releases) 下载对应平台版本。
+
+```powershell
+npm install -g @rsrsai/cli
+```
+
+按 [Runtime 使用指南](https://github.com/risense-ai/respire-cli/blob/main/docs/runtime.md)在 Respire 中准备账号、模型，启动并解锁本地 HTTP Runtime。插件不会代为安装本体、启动服务或管理账号。
 
 需要 Magpie **0.1.1273+** 和 Bun **1.3.6+**，Respire HTTP Runtime 必须已运行并解锁。推荐 Magpie **0.1.2208+**，以正确识别本机 Agent 的 magpie-key 来源；旧版对此来源可能跳过。页面配置热更新需要 **0.1.1531+**，更早版本需重启 Magpie。
 
@@ -91,6 +100,10 @@ magpie plugin add @rsrsai/magpie
 | stateDir | 可选绝对路径，默认用户目录 .rsrs/magpie；加密保存去重状态、队列、证据、进度和结果。 |
 
 生成凭据由用户在 Magpie 启动环境中设置。配置只保存变量名；密钥不进模型上下文、队列或状态日志。启用 archive 意味着允许将本轮消息、工具内容和相关记忆发给该服务，并产生额外模型用量。
+
+## 使用方式
+
+首次使用按顺序完成：[安装 Respire CLI](https://github.com/risense-ai/respire-cli) → 在 CLI 中准备并解锁本地 Runtime → 安装 Magpie 插件 → 打开 respire-memory 设置页填写 Runtime 与归档生成模型。设置页顶部始终保留本体安装链接和检查命令；仅安装插件或保存配置不代表读存已经可用。
 
 ## 记忆流程
 
