@@ -16,18 +16,18 @@
 
 0.3.0 每轮自动存检默认开启，使用前必须配置生成模型。没有模型、主动关闭归档或处于只读模式时，插件会说明未满足完整读存流程；不会把待处理当作已存。原始对话采集仍默认关闭。网关不会取得或复用客户端私有登录凭据，也不会注册或执行客户端工具。
 
-[GitHub Releases](https://github.com/risense-ai/respire-magpie/releases) 提供分发包与 SHA256SUMS。npm 首发按用户决定暂缓，**不要假定 @rsrsai/magpie 已可从 npm 安装**。
+[npm](https://www.npmjs.com/package/@rsrsai/magpie) 已提供公开包，首次发布版本为 0.3.2。[GitHub Releases](https://github.com/risense-ai/respire-magpie/releases) 同时提供分发包与 SHA256SUMS。
 
 ## 让 AI 安装
 
-复制给本地助手，并替换目录：
+复制给本地助手：
 
 ```text
-请安装 <插件完整目录> 中的 Respire Magpie 插件。
+请从 npm 安装 @rsrsai/magpie 作为 Respire Magpie 插件。
 先读 README.md，检查 Magpie、Bun 和 rsrs --client-only status --json。
 复用现有 Respire 账号、模型和 Runtime；不自行安装、启动或升级 Runtime，不索取凭据。
-检查 magpie plugin list --json，避免重复；尚未安装时执行 magpie plugin add <完整目录>。
-安装整个目录，不只安装 respire.hooks.mjs。保留无关插件和配置，不自行升级 Magpie。
+检查 magpie plugin list --json，避免重复；尚未安装时执行 magpie plugin add @rsrsai/magpie。
+安装完整包，不只安装 respire.hooks.mjs。保留无关插件和配置，不自行升级 Magpie。
 在插件页面配置实际 Runtime、项目和独立生成模型。archive 默认开启，每轮需保存过程日记；capture 原始采集保持关闭。未授权后台处理时先设 readOnly 并说明完整读存尚未启用。
 如启用 archive，说明发送的消息、工具结果和相关记忆、额外模型用量及本地状态存储。
 在我自己的终端环境配置密钥；页面仅填写环境变量名称，不接收密钥。
@@ -41,10 +41,10 @@
 
 ```powershell
 rsrs --client-only status --json
-magpie plugin add <插件完整目录>
+magpie plugin add @rsrsai/magpie
 ```
 
-也可在完整插件目录执行 `magpie plugin add .`。本地安装引用此目录，不要移动或删除它。可检出仓库，也可解压 Release tgz 后安装其中的 package 目录。目录必须包含 package.json 和全部运行模块。
+需要本地安装时，可在完整插件目录执行 `magpie plugin add .`，或执行 `magpie plugin add <插件完整目录>`。本地安装引用此目录，不要移动或删除它。可检出仓库，也可解压 Release tgz 后安装其中的 package 目录。目录必须包含 package.json 和全部运行模块。
 
 在 respire-memory 插件页面配置 Runtime、项目和开关。页面只保存配置，不检测连接或模型。原生 `magpie plugin options <标识>` 也可修改；本地安装的实际标识请先通过插件列表确认。
 
@@ -152,8 +152,8 @@ setup 检查默认 Runtime、模式及状态目录，不发模型请求或安装
 
 - main 与 PR 运行 Windows、Linux、macOS 检查，覆盖四协议、HTTP 模拟服务、独立 worker、受限工具、加密状态、只读、未知写入及分段来源。
 - 推送 v<package.version> 标签触发三系统验证，通过后自动上传 tgz 与 SHA256SUMS 到 GitHub Release；预发布标签标为 prerelease。
-- npm job 已配置 OIDC 和 provenance，当前默认跳过。按用户决定，npm 首发及可信发布绑定稍后处理。
-- npm 就绪后，可信发布绑定 risense-ai/respire-magpie 的 release.yml 并允许直接 publish，再设仓库变量 NPM_PUBLISH_ENABLED=true。不上传长效 token。稳定版使用 latest，含连字符版本使用 next。
+- npm 首发 0.3.2 通过用户 Chrome 的双重验证完成；后续 npm job 使用 OIDC 和 provenance，不上传长效 token。
+- 可信发布绑定 risense-ai/respire-magpie 的 release.yml，允许直接 publish；仓库变量 NPM_PUBLISH_ENABLED=true 控制 npm job。稳定版使用 latest，含连字符版本使用 next。只有同版本三系统验证与 GitHub Release 成功后才运行 npm 发布。
 - npm run check 做检查；npm run release:package 打包和生成校验，发布环境还校验标签与版本一致。
 
 ## 排查与验收状态
