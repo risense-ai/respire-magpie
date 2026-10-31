@@ -40,10 +40,10 @@
 
 ## 安装
 
-**首次使用须先安装 Respire 本体。** 本插件只负责 Magpie 接入，记忆库与本地 Runtime 由 [Respire CLI](https://github.com/risense-ai/respire-cli) 提供。安装方法见 [CLI npm 说明](https://github.com/risense-ai/respire-cli/blob/main/npm/README.md)，也可从 [CLI Releases](https://github.com/risense-ai/respire-cli/releases) 下载对应平台版本。
+**首次使用须先安装 Respire 本体。** 本插件只负责 Magpie 接入，记忆库与本地 Runtime 由 [Respire CLI](https://github.com/risense-ai/respire-cli) 提供。安装方法见 [CLI npm 说明](https://www.npmjs.com/package/rsrs-cli)，也可从 [CLI Releases](https://github.com/risense-ai/respire-cli/releases) 下载对应平台版本。
 
 ```powershell
-npm install -g @rsrsai/cli
+npm install -g rsrs-cli
 ```
 
 按 [Runtime 使用指南](https://github.com/risense-ai/respire-cli/blob/main/docs/runtime.md)在 Respire 中准备账号、模型，启动并解锁本地 HTTP Runtime。插件不会代为安装本体、启动服务或管理账号。
