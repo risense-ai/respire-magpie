@@ -1,0 +1,212 @@
+name: Sync Magpie community
+on:
+  workflow_run:
+    workflows: [Release]
+    types: [completed]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Published stable release tag
+        required: true
+        type: string
+      dry_run:
+        description: Check without pushing or creating a PR
+        default: true
+        type: boolean
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: magpie-community-sync
+  cancel-in-progress: false
+jobs:
+  prepare:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.conclusion == 'success' &&
+       github.event.workflow_run.event == 'push' &&
+       github.event.workflow_run.head_repository.full_name == github.repository &&
+       startsWith(github.event.workflow_run.head_branch, 'v') &&
+       !contains(github.event.workflow_run.head_branch, '-'))
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    outputs:
+      needed: ${{ steps.plan.outputs.needed }}
+      branch: ${{ steps.plan.outputs.branch }}
+      pr: ${{ steps.plan.outputs.pr }}
+      version: ${{ steps.plan.outputs.version }}
+      sha: ${{ steps.plan.outputs.sha }}
+      checkout_repo: ${{ steps.base.outputs.checkout_repo }}
+      base_sha: ${{ steps.base.outputs.base_sha }}
+      dry_run: ${{ env.DRY_RUN }}
+    env:
+      TAG: ${{ inputs.tag || github.event.workflow_run.head_branch }}
+      DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run }}
+      COMMUNITY: magpie-community/plugins
+      FORK: luodaoyi/plugins
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - uses: oven-sh/setup-bun@v2
+      - name: Validate tag
+        run: '[[ "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]'
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TAG }}
+          path: source
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          repository: magpie-community/plugins
+          ref: main
+          path: market
+          persist-credentials: false
+      - name: Verify published release and choose managed PR
+        id: plan
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          node --input-type=module <<'NODE'
+          import assert from 'node:assert/strict';
+          import fs from 'node:fs';
+          import { execFileSync as exec } from 'node:child_process';
+          const gh = args => JSON.parse(exec('gh', args, {encoding:'utf8'}));
+          const source = JSON.parse(fs.readFileSync('source/package.json'));
+          const current = JSON.parse(fs.readFileSync('market/packages/respire-memory/package.json'));
+          assert.equal(process.env.TAG, 'v' + source.version);
+          assert(/^\d+\.\d+\.\d+$/.test(current.version), 'Invalid community version');
+          const release = gh(['release','view',process.env.TAG,'--repo',process.env.GITHUB_REPOSITORY,'--json','isDraft,isPrerelease']);
+          assert(!release.isDraft && !release.isPrerelease, 'Require a published stable release');
+          const sha = exec('git',['-C','source','rev-parse','HEAD'],{encoding:'utf8'}).trim();
+          const runs = gh(['run','list','--repo',process.env.GITHUB_REPOSITORY,'--workflow','release.yml','--branch',process.env.TAG,'--status','completed','--json','conclusion,headSha']);
+          assert(runs.some(r => r.conclusion === 'success' && r.headSha === sha), 'Release gates must pass at this tag');
+          let response;
+          for (let attempt = 0; attempt < 3; attempt++) {
+            response = await fetch('https://registry.npmjs.org/@rsrsai%2fmagpie/' + source.version);
+            if (response.ok) break;
+            assert([404, 503].includes(response.status), 'Unexpected npm registry failure');
+            if (attempt < 2) await new Promise(resolve => setTimeout(resolve, 30000));
+          }
+          assert(response.ok, 'Published npm version is not yet available; rerun after propagation');
+          const npm = await response.json();
+          assert(npm.version === source.version && npm.dist?.integrity, 'Require public npm publication');
+          const a = source.version.split('.').map(Number), b = current.version.split('.').map(Number);
+          const needed = (a.map((n,i) => n-b[i]).find(n => n !== 0) ?? 0) > 0;
+          const owner = process.env.FORK.split('/')[0];
+          const prs = gh(['pr','list','--repo',process.env.COMMUNITY,'--author',owner,'--state','open','--limit','100','--json','number,headRefName,headRepositoryOwner,mergeable']);
+          const managed = prs.filter(p => p.headRepositoryOwner.login === owner && p.headRefName.startsWith('respire-sync-v'));
+          assert(managed.length <= 1, 'Multiple managed PRs require review');
+          assert(managed[0]?.mergeable !== 'CONFLICTING', 'A conflicting PR requires human review');
+          const branch = managed[0]?.headRefName ?? 'respire-sync-v' + source.version;
+          assert(/^respire-sync-v\d+\.\d+\.\d+$/.test(branch));
+          fs.appendFileSync(process.env.GITHUB_OUTPUT, `needed=${needed}\nbranch=${branch}\npr=${managed[0]?.number ?? ''}\nversion=${source.version}\nsha=${sha}\n`);
+          console.log(needed ? `Prepare ${source.version} on ${branch}` : `Community main already has ${current.version}; no PR needed`);
+          NODE
+      - name: Select branch and sync package
+        id: base
+        if: steps.plan.outputs.needed == 'true'
+        env:
+          BRANCH: ${{ steps.plan.outputs.branch }}
+          PR: ${{ steps.plan.outputs.pr }}
+        run: |
+          checkout_repo=$COMMUNITY
+          git -C market ls-remote "https://github.com/$FORK.git" "refs/heads/$BRANCH" > "$RUNNER_TEMP/branch-refs"
+          if [[ -s "$RUNNER_TEMP/branch-refs" ]]; then
+            checkout_repo=$FORK
+            git -C market fetch "https://github.com/$FORK.git" "$BRANCH"
+            git -C market switch -c "$BRANCH" FETCH_HEAD
+          else
+            git -C market switch -c "$BRANCH"
+          fi
+          printf 'checkout_repo=%s\nbase_sha=%s\n' "$checkout_repo" "$(git -C market rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+          node scripts/sync-community.mjs source market
+          git -C market diff --check
+      - name: Existing community checks
+        if: steps.plan.outputs.needed == 'true'
+        working-directory: market
+        run: |
+          HOME=$(mktemp -d) bun test
+          bun scripts/check.mjs
+          cd packages/respire-memory
+          npm pack --dry-run
+  publish:
+    needs: prepare
+    if: needs.prepare.outputs.needed == 'true' && needs.prepare.outputs.dry_run != 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      COMMUNITY: magpie-community/plugins
+      FORK: luodaoyi/plugins
+      TAG: v${{ needs.prepare.outputs.version }}
+    steps:
+      # Community checks run on another runner with no cross-repository credential.
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TAG }}
+          path: source
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          repository: ${{ needs.prepare.outputs.checkout_repo }}
+          ref: ${{ needs.prepare.outputs.base_sha }}
+          path: market
+          persist-credentials: false
+      - name: Reproduce checked payload on a fresh runner
+        env:
+          EXPECTED_SHA: ${{ needs.prepare.outputs.sha }}
+        run: |
+          [[ "$(git -C source rev-parse HEAD)" == "$EXPECTED_SHA" ]]
+          node scripts/sync-community.mjs source market
+          git -C market diff --check
+      - name: Push and create or update PR
+        env:
+          GH_TOKEN: ${{ secrets.MAGPIE_COMMUNITY_TOKEN }}
+          BRANCH: ${{ needs.prepare.outputs.branch }}
+          PR: ${{ needs.prepare.outputs.pr }}
+          VERSION: ${{ needs.prepare.outputs.version }}
+          SOURCE_SHA: ${{ needs.prepare.outputs.sha }}
+        run: |
+          if [[ -z "$GH_TOKEN" ]]; then
+            echo '::error::Set the repository secret MAGPIE_COMMUNITY_TOKEN (classic PAT, public_repo).'
+            exit 1
+          fi
+          [[ "$(gh api user --jq .login)" == "${FORK%%/*}" ]]
+          if [[ -n "$PR" ]]; then
+            [[ "$(gh pr view "$PR" --repo "$COMMUNITY" --json state --jq .state)" == OPEN ]]
+          fi
+          if [[ -z "$PR" ]]; then
+            closed=$(gh pr list --repo "$COMMUNITY" --head "${FORK%%/*}:$BRANCH" --state closed --json number --jq length)
+            [[ "$closed" == 0 ]] || { echo '::error::A closed PR for this branch requires human review.'; exit 1; }
+          fi
+          gh auth setup-git --hostname github.com
+          git -C market config user.name 'github-actions[bot]'
+          git -C market config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git -C market config core.hooksPath /dev/null
+          git -C market add packages/respire-memory
+          git -C market diff --cached --name-only | while IFS= read -r file; do
+            [[ "$file" == packages/respire-memory/* ]] || exit 1
+          done
+          if ! git -C market diff --cached --quiet; then
+            git -C market commit -m "chore(respire-memory): sync $VERSION" -m "Sync published $TAG ($SOURCE_SHA); preserve community identity and README. Existing community checks passed."
+          fi
+          git -C market push "https://github.com/$FORK.git" "HEAD:refs/heads/$BRANCH"
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          const {TAG, SOURCE_SHA, GITHUB_REPOSITORY, GITHUB_RUN_ID} = process.env;
+          fs.writeFileSync('community-pr.md', `Sync published [${TAG}](https://github.com/${GITHUB_REPOSITORY}/releases/tag/${TAG}) at ${SOURCE_SHA}.\n\nRuntime modules, page assets and existing checks are synchronized; community package identity, repository and README are retained.\n\nExisting full community tests, package checks and pack dry-run passed in [this workflow](https://github.com/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}).\n\nPlease review and merge under the community rules. Upstream publication and these checks do not replace community approval.\n`);
+          NODE
+          if [[ -n "$PR" ]]; then
+            gh pr edit "$PR" --repo "$COMMUNITY" --title "chore(respire-memory): sync $VERSION" --body-file community-pr.md
+          else
+            gh pr create --repo "$COMMUNITY" --base main --head "${FORK%%/*}:$BRANCH" --title "chore(respire-memory): sync $VERSION" --body-file community-pr.md
+          fi

@@ -170,6 +170,7 @@ setup 检查默认 Runtime、模式及状态目录，不发模型请求或安装
 - npm 首发 0.3.2 通过用户 Chrome 的双重验证完成；后续 npm job 使用 OIDC 和 provenance，不上传长效 token。
 - 可信发布绑定 risense-ai/respire-magpie 的 release.yml，允许直接 publish；仓库变量 NPM_PUBLISH_ENABLED=true 控制 npm job。稳定版使用 latest，含连字符版本使用 next。只有同版本三系统验证与 GitHub Release 成功后才运行 npm 发布。
 - npm run check 做检查；npm run release:package 打包和生成校验，发布环境还校验标签与版本一致。
+- 稳定版 Release 全部成功后，`Sync Magpie community` 自动同步社区副本并提交或更新官方 PR。有未合并的机器人 PR 就继续更新；合并后的下次发布才新建 PR。需要一次性配置专用跨仓库授权，维护者审核仍保留，详见[商店自动同步](docs/COMMUNITY-SYNC.md)。
 
 ## 排查与验收状态
 
