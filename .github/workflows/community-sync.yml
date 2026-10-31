@@ -29,7 +29,7 @@ jobs:
        startsWith(github.event.workflow_run.head_branch, 'v') &&
        !contains(github.event.workflow_run.head_branch, '-'))
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 25
     outputs:
       needed: ${{ steps.plan.outputs.needed }}
       branch: ${{ steps.plan.outputs.branch }}
@@ -89,7 +89,8 @@ jobs:
             response = await fetch('https://registry.npmjs.org/@rsrsai%2fmagpie/' + source.version);
             if (response.ok) break;
             assert([404, 503].includes(response.status), 'Unexpected npm registry failure');
-            if (attempt < 2) await new Promise(resolve => setTimeout(resolve, 30000));
+            // npm scans uploads before public availability; allow two bounded readiness waits.
+            if (attempt < 2) await new Promise(resolve => setTimeout(resolve, [300000, 600000][attempt]));
           }
           assert(response.ok, 'Published npm version is not yet available; rerun after propagation');
           const npm = await response.json();
