@@ -18,6 +18,8 @@
 
 [npm](https://www.npmjs.com/package/@rsrsai/magpie) 已提供公开包，首次发布版本为 0.3.2。[GitHub Releases](https://github.com/risense-ai/respire-magpie/releases) 同时提供分发包与 SHA256SUMS。
 
+[0.3.3 npm 自动发布验收报告](docs/NPM-PUBLISH-0.3.3.md)：Chrome 可信发布连接显示 Valid；GitHub OIDC 发布、公共 npm 安装及签名/attestation 校验通过。
+
 ## 让 AI 安装
 
 复制给本地助手：

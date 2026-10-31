@@ -23,7 +23,7 @@ The first v0.3.2 main-branch CI run passed macOS/Linux but exposed a separate fi
 | 11: community README / upstream reports | Community README is rewritten around its actual package, CI entry, monorepo dist/provenance and limitations. Personal paths and upstream release-workflow instructions are removed. Upstream reports are linked and explicitly labeled, not packaged as community CI evidence |
 | 12: placement / name | Entry/README row moved after the existing memory-hook entries. The requested product/display name respire-memory is retained rather than renamed to Respire |
 
-## Final automated verification
+## v0.3.2 verification (historical)
 
 - [Three-OS upstream CI at 1a080fb](https://github.com/risense-ai/respire-magpie/actions/runs/41192351640): Windows, Linux and macOS passed with Node 24 and Bun 1.3.6, including the discovered adapter and package dry-run.
 - [Supplemental community compatibility run](https://github.com/risense-ai/respire-magpie/actions/runs/41192352925) checked out community contribution **df58d566b9ddca3aaced1b490035e0a26468a554** on Linux: **4193 pass, 3 skip, 0 fail**, 4196 tests across 328 files; root checks and the 22-file package dry-run passed. The package's adapter was discovered and passed within the full suite.
@@ -53,4 +53,6 @@ At 7f170e2, Windows passed, while macOS Bun 1.3.6 reported EINVAL on owner-file 
 
 ### Remaining host limits
 
-The engine's strict before-send persistence requirement still needs an appropriate host callback or a client-owned loop: the current notification is after reply completion. Native desktop rendering, live all-protocol sessions, exhaustive crash/power-loss/account-switch recovery, npm first publication and marketplace approval remain outside the proven result. See the [feature matrix](FEATURES.md) and [0.3.0 correction report](TEST-REPORT-0.3.0.md).
+The [v0.3.3 publication acceptance](NPM-PUBLISH-0.3.3.md) records the final passing three-OS and updated full-community runs, public npm install/signature/attestation verification, and the Chrome-configured OIDC connection showing Valid. The earlier failures above remain part of this report.
+
+The engine's strict before-send persistence requirement still needs an appropriate host callback or a client-owned loop: the current notification is after reply completion. Native desktop rendering, live all-protocol sessions, exhaustive crash/power-loss/account-switch recovery and marketplace approval remain outside the proven result. See the [feature matrix](FEATURES.md) and [0.3.0 correction report](TEST-REPORT-0.3.0.md).
