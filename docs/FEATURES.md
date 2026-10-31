@@ -1,6 +1,6 @@
 # respire-memory capabilities and boundaries
 
-Applies to **v0.3.2–v0.3.3**. v0.3.3 handles observed Windows/macOS Bun errors during concurrent lock acquisition within the existing deadline, and updates npm distribution documentation. See the [review repair report](REVIEW-RESPONSE-0.3.1.md), [policy-correction report](TEST-REPORT-0.3.0.md) and [historical v0.2.1 acceptance report](TEST-REPORT.md). A working memory round trip is not proof of full engine-policy compliance.
+Applies to **v0.3.4**. Each new turn still reads the complete engine policy; identical policy text is injected once per conversation and again only on change. The ineffective injectRules option is removed. See the [review repair report](REVIEW-RESPONSE-0.3.1.md), [policy-correction report](TEST-REPORT-0.3.0.md) and [historical v0.2.1 acceptance report](TEST-REPORT.md). A working memory round trip is not proof of full engine-policy compliance.
 
 ## Agent self-evolution through experience
 
@@ -15,7 +15,7 @@ This feedback loop changes reusable memory, not model weights. Readback confirms
 | Capability | Implementation | Evidence / limitation |
 | --- | --- | --- |
 | Per-turn read | Recall, complete policy from summary.instructions, selected full records; causal chain for decision/lesson/agreement/error-like hits | Four protocol fixtures; real Runtime complete-policy injection inspected. Same-turn retries reuse durable results |
-| Policy presence | Full policy is supplied every new turn, independently of the obsolete injectRules flag | Legacy small recall budgets do not clip policy; separate 128 KiB allowance plus fixed adapter; increases context cost |
+| Policy presence | Complete policy read every new turn; full text supplied on first turn and policy changes, with per-turn read receipts | Identical text is retained once in stable history, including after restart; separate 128 KiB allowance plus fixed adapter. Removed injectRules does not disable mandatory reads |
 | Explicit remember | Front end reads policy/candidates, reports pending and defers classification and writes | No direct foreground remember that bypasses classification; pending is not saved |
 | Automatic archival | Default on; detached worker uses a separately configured Chat Completions model | Requires generation setup. Disabled/unconfigured archival is disclosed as incomplete, not successful |
 | Mandatory process diary | Writable success requires a new trivial write in this archival and readback of its returned ID | No-write nothing-to-store is rejected. Existing long-term facts still must not be duplicated |

@@ -1,5 +1,16 @@
 # Magpie PR 553 review repair report
 
+## v0.3.4 follow-up to review 5722498530
+
+The reviewer accepted the fresh per-request identity check and display name, and independently reported 4187 passing community tests, 9 skipped, 0 failures at 10184ce. Two remaining blockers concerned repeated policy text and the ineffective injectRules option.
+
+- Every newly observed turn still calls recall and reads the complete Runtime policy. A policy hash is persisted with each turn; the full rules/policy block is supplied on the first turn and whenever the policy changes. Unchanged policy remains in its original historical position. Per-turn blocks carry memories and actual read receipts. No mandatory read or automatic process-diary requirement is removed.
+- injectRules is removed from the manifest, validated options, configuration examples and checks. Stale configuration keys are ignored, as other unknown keys are; they cannot disable mandatory policy reads.
+- Failed recall/policy reads report failure through the host without adding an unsaved message to the latest turn. Successfully restored earlier prefixes remain intact.
+- The community registry entry follows its neighbours' multi-line formatting.
+
+The existing checks now exercise five consecutive turns, host resets, policy changes, unchanged follow-up and policy reversion across Chat, Responses, Anthropic and Gemini. They verify one copy of unchanged policy, a new copy only on change, one actual recall/prompt per new turn, and byte-identical historical prefixes. Node and the Bun-discovered adapter pass locally on Windows. CI and live npm acceptance will be recorded separately after execution; these local fixtures are not live deployment evidence.
+
 This responds to the review of community head 40fec72. It is an upstream engineering report, not a claim that community CI has approved this package. The community package links upstream reports rather than shipping copies as its own evidence.
 
 The first repair candidate, v0.3.1, failed Windows CI with a transient EPERM while removing an empty lock directory under concurrent access. Its tag is retained and no release assets were published. The follow-up candidate is v0.3.2, with bounded Windows cleanup retries. It also corrects a separate empty-recall bug: hiding display hints must not discard the complete engine policy. The existing checks now cover empty recall with hints off across all four adapters.

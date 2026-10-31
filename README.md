@@ -62,7 +62,6 @@ magpie plugin add @rsrsai/magpie
   "limit": 3,
   "remember": true,
   "readOnly": false,
-  "injectRules": true,
   "showMemoryStatus": false,
   "capture": false,
   "archive": true,
@@ -79,11 +78,10 @@ magpie plugin add @rsrsai/magpie
 | project | 非空时过滤召回、标注新写入并限制后台更新目标；留空可使用当前整个库。不是权限或账号边界。 |
 | gatewayTimeoutMs | 宿主 Hook 超时，100–10000 毫秒；整个链另有总预算。后台模型处理不占用这段预算。 |
 | requestTimeoutMs | 前台每个 Runtime 请求含正文读取的预算，100–5000 毫秒。 |
-| maxBytes | 记忆与回执注入预算，1024–32768 字节。完整政策另有最多 128 KiB 预算及固定宿主适配说明，每轮完整注入，不裁剪政策；总上下文成本会增加。 |
+| maxBytes | 记忆与回执注入预算，1024–32768 字节。完整政策另有最多 128 KiB 预算及固定宿主适配说明，不裁剪政策。每轮仍读取完整政策；同一会话只在首次和政策变化时注入全文，其余回合只增加记忆与读取回执。 |
 | limit | 候选 1–5 条，默认 3；超预算或含疑似凭据的正文跳过。 |
 | remember | 处理“记：”“存：”“记录：”“记住：”“remember:”前缀，默认开启。 |
 | readOnly | 禁止本插件显式存储、采集及后台写入，不限制其他客户端工具。 |
-| injectRules | 兼容旧配置保留；0.3.0 不再允许此项关闭每轮完整政策读取与注入。 |
 | showMemoryStatus | 提供 Memory、Used 及上次归档状态提示，默认关闭；不能保证客户端显示，严格格式应省略标签。 |
 | capture | 完成回合原始文字与工具记录保存为 trivial 日记，默认关闭。 |
 | archive | 每个完成回合保存过程日记，并用独立模型提炼、查重、更新或挂靠与回读，默认开启；必须配置模型。关闭即不满足完整每轮必存。 |
