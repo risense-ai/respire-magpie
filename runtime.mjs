@@ -76,7 +76,8 @@ export async function rpc(o, args, signal) {
   try { result = JSON.parse(new TextDecoder('utf-8', { fatal: true }).decode(Buffer.concat(chunks))); }
   catch { throw new Failure('invalid'); }
   if (!result || result.v !== 1 || result.id !== id) throw new Failure('invalid');
-  if (result.ok !== true || result.exit !== 0) throw new Failure(result.code === 'daemon_unavailable' ? 'unavailable' : 'invalid');
+  const pending = result.ok === false && result.exit === 2 && result.envelope?.status === 'pending';
+  if (!pending && (result.ok !== true || result.exit !== 0)) throw new Failure(result.code === 'daemon_unavailable' ? 'unavailable' : 'invalid');
   if (!result.envelope || !['ok', 'pending', 'skip'].includes(result.envelope.status)) throw new Failure('invalid');
   return result.envelope;
 }

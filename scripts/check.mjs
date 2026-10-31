@@ -42,6 +42,10 @@ const server = createServer(async (req, res) => {
     details: command === 'recall' ? [{ id }] : command === 'prompt' ? 'Complete fixture policy' : { entry: entries.get(r.args[2]) ?? entries.get(id) } };
   if (command === 'show') envelope.summary.id = r.args[2];
   if (command === 'remember') {
+    if (r.args[2] === 'pending-fixture-content') {
+      res.setHeader('Content-Type', 'application/json');
+      res.end(JSON.stringify({ v: 1, id: r.id, ok: false, exit: 2, envelope: { status: 'pending', summary: {}, items: [] } })); return;
+    }
     writes++; entries.set(savedId, { id: savedId, title: 'Saved', content: r.args[2], project: '' }); envelope.summary.id = savedId;
     if (unknownWrite) { res.destroy(); return; }
   }
@@ -110,6 +114,7 @@ try {
   let queued;
   for (let i = 0; i < 100; i++) { queued = await store.get(queuedName); if (['completed', 'unconfirmed'].includes(queued?.status)) break; await new Promise(r => setTimeout(r, 100)); }
   assert.equal(queued?.status, 'completed', JSON.stringify({ status: queued?.status, error: queued?.error }));
+  assert.equal((await call(['remember', 'pending-fixture-content'])).status, 'pending');
   console.log('Detached worker check passed: gateway completion -> encrypted queue -> child process -> model tools -> readback.');
   console.log('Archive checks passed: real HTTP model tool loop, readback, encrypted persistence, unknown-write no-retry, read-only, tool restrictions and source-checked segmentation.');
 } finally { await new Promise(resolve => server.close(resolve)); }

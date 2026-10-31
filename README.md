@@ -1,8 +1,14 @@
-# Respire for Magpie
+# respire-memory for Magpie
 
 <p align="center"><picture><source media="(prefers-color-scheme: dark)" srcset="page/icon-respire-ai-memory.svg"><img src="page/icon-respire-ai-memory-light.svg" width="112" height="112" alt="Respire AI 记忆"></picture></p>
 
-通过 Magpie 为客户端提供 Respire 记忆。**0.2.0** 支持自动召回正文、显式存储、会话规则、后台提炼与查重归档、大回合分段、证据回读、持久去重，以及只读和显示偏好。
+> 吸即存，呼即取——给 AI Agent 装上记忆，让经验成为下一轮行动的起点。
+
+**respire-memory 帮助 AI Agent 持续自进化。** 它通过 Magpie 接入 Respire：回答前找回相关经验，用户明确要求时存下事实；开启后台整理后，再从完成的对话中提炼决定、方法和教训，查重并保存，供后续任务使用。
+
+这里的自进化来自记忆与经验的持续积累，不涉及修改模型权重；效果取决于记录质量、召回结果和 Agent 的实际采用。
+
+插件支持自动召回正文、显式存储、会话规则、后台提炼与查重归档、大回合分段、证据回读、持久去重，以及只读和显示偏好。
 
 后台整理默认关闭，需要明确配置生成模型。没有生成服务也能使用基础召回和显式存储。网关不会取得或复用客户端私有登录凭据，也不会注册或执行客户端工具。
 
@@ -36,7 +42,7 @@ magpie plugin add D:\sources\repos-new\gh\1memory\respire-magpie
 
 也可在完整插件目录执行 `magpie plugin add .`。本地安装引用此目录，不要移动或删除它。可检出仓库，也可解压 Release tgz 后安装其中的 package 目录。目录必须包含 package.json 和全部运行模块。
 
-在 Respire 插件页面配置 Runtime、项目和开关。页面只保存配置，不检测连接或模型。原生 `magpie plugin options <标识>` 也可修改；本地安装的实际标识请先通过插件列表确认。
+在 respire-memory 插件页面配置 Runtime、项目和开关。页面只保存配置，不检测连接或模型。原生 `magpie plugin options <标识>` 也可修改；本地安装的实际标识请先通过插件列表确认。
 
 ## 配置
 
@@ -154,10 +160,12 @@ setup 检查默认 Runtime、模式及状态目录，不发模型请求或安装
 | account-changed、read-only、job-disabled | 账号、权限或开关改变，任务停止，不扩大权限。 |
 | 加密状态或锁报错 | 保留目录排查，不自动删密钥、密文或锁绕过失败。 |
 
-检查使用隔离目录、HTTP 模拟 Runtime/生成服务及真实独立 worker，不向生产记忆库写测试事实。真实 Runtime 的基础只读召回已验证；完整 Magpie UI、用户实际生成服务和生产写入仍须单独验收。本机 Magpie 0.1.1908，未自动升级。
+自动检查使用隔离目录、HTTP 模拟 Runtime/生成服务及真实独立 worker，不向生产记忆库写测试事实。另于 2026-10-31 在本机 Magpie 0.1.1908 完成实机验收：真实网关召回、显式存储 pending 回执、独立 worker 通过已配置的 WorkBuddy 模型归档、落库回读，以及新会话召回均通过。配置页与侧栏的名称、介绍及亮暗图标在 Magpie web 中核对通过；未直接操作原生桌面窗口，也未升级宿主。
+
+0.2.1 修复 Runtime 将 pending 作为退出码 2 返回时被误判失败的问题；待处理请求仍只尝试一次，后台按引擎政策处理，不伪报已保存。
 
 ## 图标与来源
 
-亮暗 SVG 取自项目 icon/，副本在 page/。配置页跟随官方 bridge 的 data-theme，README 用 picture。插件列表内嵌自适应 SVG data URI，侧栏使用 page/icon.svg，无需外网。单文件复用同源 DSH 组合；宿主显式主题与系统主题不同时的实际显示仍需验收。
+亮暗 SVG 取自项目 icon/，副本在 page/。配置页跟随官方 bridge 的 data-theme，README 用 picture。插件列表内嵌自适应 SVG data URI，侧栏使用 page/icon.svg，无需外网。单文件复用同源 DSH 组合。已验收跟随系统亮暗主题的实际显示；宿主强制主题与系统主题不一致的情况尚未验收。
 
 参考 [Magpie Hook 契约](https://github.com/yetone/magpie/blob/main/docs/subsystems/gateway-request-hooks.md) 和 [PowerContext 插件](https://github.com/magpie-community/plugins/tree/main/packages/powercontext)。对话解析器为 MIT 改编；证据处理和受限工具复用 Respire Codex。见 NOTICE 和 LICENSE。

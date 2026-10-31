@@ -1,7 +1,7 @@
 {
   "name": "@rsrsai/magpie",
-  "version": "0.2.0",
-  "description": "Respire memory recall and optional conversation capture for Magpie",
+  "version": "0.2.1",
+  "description": "帮助 AI Agent 通过记忆召回、经验积累与后台归档持续自进化",
   "type": "module",
   "license": "MIT",
   "keywords": [
@@ -51,7 +51,7 @@
       "stateDir": ""
     },
     "page": {
-      "title": "Respire",
+      "title": "respire-memory",
       "file": "page/settings.html",
       "icon": "page/icon.svg"
     },

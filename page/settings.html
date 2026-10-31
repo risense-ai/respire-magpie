@@ -2,11 +2,11 @@
 <html lang="zh-CN">
 <head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Respire</title><link rel="icon" href="icon.svg" type="image/svg+xml"><link rel="stylesheet" href="style.css">
+  <title>respire-memory</title><link rel="icon" href="icon.svg" type="image/svg+xml"><link rel="stylesheet" href="style.css">
   <script src="_magpie/bridge.js" defer></script><script src="settings.js" defer></script>
 </head>
 <body><main>
-  <header><img class="brand brand-light" src="icon-respire-ai-memory-light.svg" width="46" height="46" alt=""><img class="brand brand-dark" src="icon-respire-ai-memory.svg" width="46" height="46" alt=""><div><h1>Respire</h1><p>让经过 Magpie 的对话使用你的 Respire 记忆。</p></div></header>
+  <header><img class="brand brand-light" src="icon-respire-ai-memory-light.svg" width="46" height="46" alt=""><img class="brand brand-dark" src="icon-respire-ai-memory.svg" width="46" height="46" alt=""><div><h1>respire-memory</h1><p>吸即存，呼即取——让 AI Agent 在实践中积累经验，持续自进化。</p></div></header>
   <form id="form">
     <label for="url">本地 Runtime 地址</label>
     <input id="url" type="url" required value="http://127.0.0.1:15169" autocomplete="off" spellcheck="false" aria-describedby="url-help">
@@ -33,6 +33,6 @@
     <button id="save" type="submit" disabled>保存配置</button>
     <p id="status" role="status" aria-live="polite">正在读取配置…</p>
   </form>
-  <section><h2>使用方式</h2><p>召回自动执行。“/nomem”或“#nomem”跳过本条召回与采集。存储是否成功以模型收到的引擎回执为准。</p><p>插件不安装或启动 Runtime。连接失败时原对话继续；共享网关的其他调用者无法使用此插件读取或保存记忆。</p></section>
+  <section><h2>使用方式</h2><p>召回自动执行。“/nomem”或“#nomem”只跳过本条召回；已开启的采集与后台归档仍可运行。存储是否成功以模型收到的引擎回执为准。</p><p>插件不安装或启动 Runtime。连接失败时原对话继续；共享网关的其他调用者无法使用此插件读取或保存记忆。</p></section>
 </main></body>
 </html>
