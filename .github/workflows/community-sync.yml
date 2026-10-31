@@ -140,7 +140,7 @@ jobs:
           const paths = exec('git',['-C','market','diff','--name-only'],{encoding:'utf8'}).trim().split('\n').filter(Boolean);
           // A prior push may have succeeded before PR metadata failed; still reconcile the open PR.
           let changed = paths.length > 0 || Boolean(process.env.PR);
-          if (!process.env.PR && paths.length === 1 && paths[0] === manifest) {
+          if (paths.length === 1 && paths[0] === manifest) {
             const before = JSON.parse(exec('git',['-C','market','show','HEAD:' + manifest],{encoding:'utf8'}));
             const after = JSON.parse(fs.readFileSync('market/' + manifest));
             changed = !isDeepStrictEqual({...before, version:null}, {...after, version:null});

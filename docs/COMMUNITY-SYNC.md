@@ -4,7 +4,7 @@
 
 ## 触发与范围
 
-`.github/workflows/community-sync.yml` 在正式稳定版的 Release 工作流全部成功后触发。它核对标签、源提交、Release 门禁和公开 npm 版本，再比较社区 main 的版本。预发布不进入稳定商店；已同步的版本直接结束，不重复创建 PR。首次同步若只有 package.json 的版本号变化，则跳过社区全量检查、推送与建 PR；只有实际运行文件、资源或包配置变化才提交新 PR，避免占用维护者和社区 CI 资源。
+`.github/workflows/community-sync.yml` 在正式稳定版的 Release 工作流全部成功后触发。它核对标签、源提交、Release 门禁和公开 npm 版本，再比较社区 main 的版本。预发布不进入稳定商店；已同步的版本直接结束，不重复创建 PR。无论新建还是更新已有 PR，若只有 package.json 的版本号变化，都跳过社区全量检查、推送与 PR 写入；只有实际运行文件、资源或包配置变化才提交新 PR，避免占用维护者和社区 CI 资源。
 
 同步只修改 `packages/respire-memory`：发布的运行模块、页面、许可证与现有检查来自同一标签；社区包名、仓库地址、检查命令和专用 README 保留。仅在干净工作树中同步，拒绝降级、越界路径和符号链接。完整社区现有测试、根检查及打包检查通过后，才允许推送。
 
@@ -58,3 +58,9 @@ npm 上传成功后还会进行公开可用前的扫描，[官方说明通常约
 - README 中的自有测试标记保留；恢复运行保持 `a2d2467`，没有空提交或强推。
 
 验收后于 15:46:52 UTC 关闭自有 PR #1，未合并。远端前后状态与断言证据保存在忽略目录 `.verification/community0311/owned-pr-before.json` 和 `owned-pr-update-evidence.json`。此前官方 #570 仍作为已关闭的历史验证，不再用于测试；本次没有向官方仓库创建、更新或重新打开测试 PR。此次证明同一工作流在自有仓库更新已有 PR 以及部分完成恢复，不代表官方审核或合并已经发生。
+
+## 验证分支清理与后续规则
+
+按用户要求，已核对关闭状态与提交 SHA，再删除 `luodaoyi/plugins` 的三个验证分支：`respire-sync-v0.3.10`、`respire-sync-v0.3.11`、`respire-sync-validation-base`。远端精确查询确认三个引用均已不存在；本地两个仓库没有对应分支或跟踪引用。正式贡献分支、标签、本报告和本地验收证据均保留，删除前的引用记录保存在 `.verification/community0311/removed-validation-refs.json`。
+
+纯版本号变化的跳过规则同时适用于新建和更新已有 PR：不运行社区全量检查，不推送纯版本号提交，也不写官方 PR。真实文件或包配置变化仍可同步；文件已完全一致但 PR 正文尚未完成的恢复仍可执行，不增加提交。直接执行实际工作流判断代码的六项断言均通过，覆盖这三种情况各自有无已有 PR的分支；`actionlint` 和 diff 检查通过。断言结果保存在 `.verification/community0311/final-gate-assertions.json`。本轮没有重新创建验证分支或官方测试 PR。
