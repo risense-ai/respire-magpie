@@ -26,6 +26,8 @@
 
 Actions → Sync Magpie community → Run workflow：填写已发布的稳定标签并保留 `dry_run=true`。演练不推送、不写 PR；若社区版本已相同，则只报告无需同步。去掉 dry run 可重跑已发布版本的同步。
 
+验证更新已有 PR 时，手动选择 `validation=true`。目标固定为自有 `luodaoyi/plugins` 的 `respire-sync-validation-base` 分支，必须已有一张托管测试 PR，否则停止。它复用正式流程的查找、检查、推送和 PR 更新步骤；不会向官方仓库发送测试 PR。正式 Release 触发不启用此开关。测试结束后关闭自有 PR，不合并测试标记。
+
 npm 上传成功后还会进行公开可用前的扫描，[官方说明通常约 5 分钟，高峰可能 15 分钟以上](https://github.blog/changelog/2026-07-28-npm-publish-time-malware-scanning-and-dual-use-metadata/)。流程只对 registry 的 404/503 等待两次，分别等待 5 分钟和 10 分钟，累计最多 15 分钟；仍不可用则失败，待确认公开可用后只重跑同步，不重跑 Release 或重复 publish。令牌过期、权限不足、冲突、检查失败或官方审批都不会被绕过。普通 token 无法推送上游新增 workflow 时，应人工核对 fork 同步与权限，不自动扩大 scope。
 
 该流程不安装、更新或修改任何本机 Magpie 插件。自动 PR 创建成功、官方合并和商店 dist 更新是三个独立状态。

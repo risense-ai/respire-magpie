@@ -13,6 +13,10 @@ on:
         description: Check without pushing or creating a PR
         default: true
         type: boolean
+      validation:
+        description: Validate against the owned fork only (requires a seeded PR)
+        default: false
+        type: boolean
 permissions:
   contents: read
   actions: read
@@ -42,7 +46,8 @@ jobs:
     env:
       TAG: ${{ inputs.tag || github.event.workflow_run.head_branch }}
       DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run }}
-      COMMUNITY: magpie-community/plugins
+      COMMUNITY: ${{ inputs.validation && 'luodaoyi/plugins' || 'magpie-community/plugins' }}
+      BASE: ${{ inputs.validation && 'respire-sync-validation-base' || 'main' }}
       FORK: luodaoyi/plugins
     steps:
       - uses: actions/checkout@v4
@@ -61,8 +66,8 @@ jobs:
           persist-credentials: false
       - uses: actions/checkout@v4
         with:
-          repository: magpie-community/plugins
-          ref: main
+          repository: ${{ env.COMMUNITY }}
+          ref: ${{ env.BASE }}
           path: market
           persist-credentials: false
       - name: Verify published release and choose managed PR
@@ -98,8 +103,9 @@ jobs:
           const a = source.version.split('.').map(Number), b = current.version.split('.').map(Number);
           const needed = (a.map((n,i) => n-b[i]).find(n => n !== 0) ?? 0) > 0;
           const owner = process.env.FORK.split('/')[0];
-          const prs = gh(['pr','list','--repo',process.env.COMMUNITY,'--author',owner,'--state','open','--limit','100','--json','number,headRefName,headRepositoryOwner,mergeable']);
+          const prs = gh(['pr','list','--repo',process.env.COMMUNITY,'--base',process.env.BASE,'--author',owner,'--state','open','--limit','100','--json','number,headRefName,headRepositoryOwner,mergeable']);
           const managed = prs.filter(p => p.headRepositoryOwner.login === owner && p.headRefName.startsWith('respire-sync-v'));
+          if (process.env.COMMUNITY === process.env.FORK) assert(managed.length === 1, 'Validation requires one seeded PR in the owned fork');
           assert(managed.length <= 1, 'Multiple managed PRs require review');
           assert(managed[0]?.mergeable !== 'CONFLICTING', 'A conflicting PR requires human review');
           const branch = managed[0]?.headRefName ?? 'respire-sync-v' + source.version;
@@ -155,7 +161,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     env:
-      COMMUNITY: magpie-community/plugins
+      COMMUNITY: ${{ inputs.validation && 'luodaoyi/plugins' || 'magpie-community/plugins' }}
+      BASE: ${{ inputs.validation && 'respire-sync-validation-base' || 'main' }}
       FORK: luodaoyi/plugins
       TAG: v${{ needs.prepare.outputs.version }}
     steps:
@@ -201,7 +208,7 @@ jobs:
             [[ "$(gh pr view "$PR" --repo "$COMMUNITY" --json state --jq .state)" == OPEN ]]
           fi
           if [[ -z "$PR" ]]; then
-            closed=$(gh pr list --repo "$COMMUNITY" --head "$BRANCH" --author "${FORK%%/*}" --state closed --json number --jq length)
+            closed=$(gh pr list --repo "$COMMUNITY" --base "$BASE" --head "$BRANCH" --author "${FORK%%/*}" --state closed --json number --jq length)
             [[ "$closed" == 0 ]] || { echo '::error::A closed PR for this branch requires human review.'; exit 1; }
           fi
           gh auth setup-git --hostname github.com
@@ -224,5 +231,5 @@ jobs:
           if [[ -n "$PR" ]]; then
             gh pr edit "$PR" --repo "$COMMUNITY" --title "chore(respire-memory): sync $VERSION" --body-file community-pr.md
           else
-            gh pr create --repo "$COMMUNITY" --base main --head "${FORK%%/*}:$BRANCH" --title "chore(respire-memory): sync $VERSION" --body-file community-pr.md
+            gh pr create --repo "$COMMUNITY" --base "$BASE" --head "${FORK%%/*}:$BRANCH" --title "chore(respire-memory): sync $VERSION" --body-file community-pr.md
           fi
