@@ -25,6 +25,14 @@ The first v0.3.2 main-branch CI run passed macOS/Linux but exposed a separate fi
 
 ## Local verification
 
+## Final automated verification
+
+- [Three-OS upstream CI at 1a080fb](https://github.com/risense-ai/respire-magpie/actions/runs/41192351640): Windows, Linux and macOS passed with Node 24 and Bun 1.3.6, including the discovered adapter and package dry-run.
+- [Supplemental community compatibility run](https://github.com/risense-ai/respire-magpie/actions/runs/41192352925) checked out community contribution **df58d566b9ddca3aaced1b490035e0a26468a554** on Linux: **4193 pass, 3 skip, 0 fail**, 4196 tests across 328 files; root checks and the 22-file package dry-run passed. The package's adapter was discovered and passed within the full suite.
+- These are upstream-hosted runs. Community PR CI still requires maintainer approval; this report does not replace that approval or claim the PR has merged. The failed earlier Windows runs remain visible and documented above.
+
+### Local verification details
+
 Windows; Node 26.13.0; host Bun 1.4.4. The existing checks pass under Node and via the Bun-discovered test adapter. A separate empty-PATH run of the adapter passed after removing its external-node dependency.
 
 The checks now include real cross-process lock contention, known-dead legacy/new lock recovery, live contention, notification failure after verified storage, 512 completed jobs versus active capacity, evidence/receipt expiry without resetting the retention clock, retained unknown-write markers, stale/changed controls, stopping before the next generation after disable, exact durable history restoration and neutral User-Agent headers. Four-protocol, policy ordering, diary/readback, encryption and unknown-write no-retry checks remain.
