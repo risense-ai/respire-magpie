@@ -10,8 +10,18 @@ export function alive(pid) {
 }
 
 async function removeEmpty(path) {
-  try { await rmdir(path); return true; }
-  catch (error) { if (['ENOENT', 'ENOTEMPTY', 'EEXIST'].includes(error.code)) return false; throw error; }
+  for (let attempt = 0; ; attempt++) {
+    try { await rmdir(path); return true; }
+    catch (error) {
+      if (['ENOENT', 'ENOTEMPTY', 'EEXIST'].includes(error.code)) return false;
+      if (process.platform === 'win32' && ['EPERM', 'EBUSY'].includes(error.code)) {
+        // Windows can briefly retain a directory handle; an empty lock remains recoverable.
+        if (attempt === 2) return false;
+        await delay(25); continue;
+      }
+      throw error;
+    }
+  }
 }
 
 export async function acquireLock(path, { waitMs = 5000 } = {}) {

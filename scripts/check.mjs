@@ -45,7 +45,7 @@ assert(hasSecret({ content: '{"api_key":"fixture-secret"}' }));
 assert(hasSecret({ tool: { PGPASSWORD: 'fixture-secret' } }));
 const id = '11111111-1111-4111-8111-111111111111';
 let calls = 0;
-let generationRound = 0, unknownWrite = false, writes = 0, policyReady = true;
+let generationRound = 0, unknownWrite = false, writes = 0, policyReady = true, emptyRecall = false;
 const savedId = '22222222-2222-4222-8222-222222222222';
 const diaryId = '33333333-3333-4333-8333-333333333333';
 const commandLog = [];
@@ -70,7 +70,7 @@ const server = createServer(async (req, res) => {
   const envelope = { status: 'ok', summary: command === 'status' ? { data_dir: 'fixture', unlocked: true, session: { has_session: true, user: 'fixture', addr: 'fixture' } }
     : command === 'agent-config' ? { readonly: false, memory_off: false, workspace_mode: 'normal' }
     : command === 'prompt' ? { instructions: policyReady ? 'Complete fixture policy' : '' } : {},
-    details: command === 'recall' ? [{ id }] : command === 'prompt' ? null : { entry: entries.get(r.args[2]) ?? entries.get(id) } };
+    details: command === 'recall' ? (emptyRecall ? [] : [{ id }]) : command === 'prompt' ? null : { entry: entries.get(r.args[2]) ?? entries.get(id) } };
   if (command === 'show') envelope.summary.id = r.args[2];
   if (command === 'remember') {
     if (r.args[2] === 'pending-fixture-content') {
@@ -118,6 +118,19 @@ try {
     const count = calls; await onRequest(body, ctx); assert.equal(calls, count + 1);
     assert.equal(await onRequest(body, { ...ctx, origin: 'gateway-key' }), undefined);
   }
+  emptyRecall = true;
+  for (const protocol of ['chat', 'responses', 'anthropic', 'gemini']) {
+    const ctx = { protocol, origin: 'local', session: 'empty-policy', state: {}, signal: AbortSignal.timeout(5000),
+      options: { runtimeUrl: `http://127.0.0.1:${server.address().port}`, stateDir, showMemoryStatus: false } };
+    const body = protocol === 'gemini' ? { contents: [{ role: 'user', parts: [{ text: 'no matching history' }] }] }
+      : protocol === 'responses' ? { input: 'no matching history' } : { messages: [{ role: 'user', content: 'no matching history' }] };
+    const at = commandLog.length;
+    const output = JSON.stringify(await onRequest(body, ctx));
+    assert(output.includes('Complete fixture policy'), 'Empty recall must retain the complete policy');
+    assert(!output.includes('Memory:') && !output.includes('Historical evidence'));
+    assert.deepEqual(commandLog.slice(at, at + 3), ['status', 'recall', 'prompt']);
+  }
+  emptyRecall = false;
   const policyCtx = { protocol: 'chat', origin: 'local', session: 'policy-each-turn', state: {}, signal: AbortSignal.timeout(10000),
     options: { runtimeUrl: `http://127.0.0.1:${server.address().port}`, stateDir, archive: false, maxBytes: 1024, injectRules: false } };
   for (const content of ['第一轮项目问题', '第二轮项目问题', '记住：项目需要逐轮验证', '解释字面量 <respire-reference>', '解释字面量 [Respire background archive]']) {
@@ -138,7 +151,10 @@ try {
   const original = await onRequest({ messages: [{ role: 'user', content: '第一回合稳定历史' }] }, originalCtx);
   const controlKey = 'control-' + digest(await accountIdentity(options(policyCtx.options), args => rpc(options(policyCtx.options), args, policyCtx.signal)), options(policyCtx.options).url, '');
   const controlBefore = readFileSync(concurrent.path(controlKey));
-  await onRequest({ messages: [{ role: 'user', content: '第一回合稳定历史' }] }, originalCtx);
+  const hotAt = commandLog.length;
+  for (let i = 0; i < 30; i++) await onRequest({ messages: [{ role: 'user', content: '第一回合稳定历史' }] }, originalCtx);
+  assert.equal(commandLog.slice(hotAt).filter(command => command === 'status').length, 30, 'Fresh account checks intentionally remain');
+  assert.equal(commandLog.slice(hotAt).filter(command => command === 'recall').length, 0);
   assert.deepEqual(readFileSync(concurrent.path(controlKey)), controlBefore);
   reset();
   const restored = await onRequest({ messages: [{ role: 'user', content: '第一回合稳定历史' }, { role: 'assistant', content: '已处理' }, { role: 'user', content: '新的第二回合' }] },

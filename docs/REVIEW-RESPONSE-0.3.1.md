@@ -1,6 +1,8 @@
-# Magpie PR 553 review response: 0.3.1
+# Magpie PR 553 review repair report
 
 This responds to the review of community head 40fec72. It is an upstream engineering report, not a claim that community CI has approved this package. The community package links upstream reports rather than shipping copies as its own evidence.
+
+The first repair candidate, v0.3.1, failed Windows CI with a transient EPERM while removing an empty lock directory under concurrent access. Its tag is retained and no release assets were published. The follow-up candidate is v0.3.2, with bounded Windows cleanup retries. It also corrects a separate empty-recall bug: hiding display hints must not discard the complete engine policy. The existing checks now cover empty recall with hints off across all four adapters.
 
 ## Review disposition
 

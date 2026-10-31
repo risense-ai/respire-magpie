@@ -105,7 +105,7 @@ async function prepare(o, query, signal, entry, extra = {}) {
   data.memories = records.filter(Boolean);
   if (o.showMemoryStatus) data.display = { notice: `Memory: ${data.memories.length} found`,
     instruction: '仅非严格格式时显示简短状态。实际采用且已读正文才报告 Used: 真实短ID [basis|ref|history]（简短标题），默认ref；评分不是可信度，写后回读仅证明落库。未采用不编造Used。', priorSave: extra.priorSave };
-  return data.memories.length || Object.keys(extra).length || o.showMemoryStatus ? block(data, o.maxBytes) : '';
+  return block(data, o.maxBytes);
 }
 
 export async function onRequest(body, ctx) {
