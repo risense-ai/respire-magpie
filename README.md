@@ -10,6 +10,8 @@
 
 插件支持自动召回正文、显式存储、会话规则、后台提炼与查重归档、大回合分段、证据回读、持久去重，以及只读和显示偏好。
 
+详细说明：[功能与边界矩阵](https://github.com/risense-ai/respire-magpie/blob/main/docs/FEATURES.md) · [0.2.1 测试报告](https://github.com/risense-ai/respire-magpie/blob/main/docs/TEST-REPORT.md)。核心链路已经实现并验收；自动识别客户端 plan、真实 SessionStart/恢复/压缩事件和原生状态行仍受宿主接口限制，不能视为与 Codex 全功能等价。
+
 后台整理默认关闭，需要明确配置生成模型。没有生成服务也能使用基础召回和显式存储。网关不会取得或复用客户端私有登录凭据，也不会注册或执行客户端工具。
 
 [GitHub Releases](https://github.com/risense-ai/respire-magpie/releases) 提供分发包与 SHA256SUMS。npm 首发按用户决定暂缓，**不要假定 @rsrsai/magpie 已可从 npm 安装**。
