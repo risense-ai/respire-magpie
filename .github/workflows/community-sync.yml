@@ -138,7 +138,8 @@ jobs:
           import { isDeepStrictEqual } from 'node:util';
           const manifest = 'packages/respire-memory/package.json';
           const paths = exec('git',['-C','market','diff','--name-only'],{encoding:'utf8'}).trim().split('\n').filter(Boolean);
-          let changed = paths.length > 0;
+          // A prior push may have succeeded before PR metadata failed; still reconcile the open PR.
+          let changed = paths.length > 0 || Boolean(process.env.PR);
           if (!process.env.PR && paths.length === 1 && paths[0] === manifest) {
             const before = JSON.parse(exec('git',['-C','market','show','HEAD:' + manifest],{encoding:'utf8'}));
             const after = JSON.parse(fs.readFileSync('market/' + manifest));
@@ -229,7 +230,7 @@ jobs:
           fs.writeFileSync('community-pr.md', `Sync published [${TAG}](https://github.com/${GITHUB_REPOSITORY}/releases/tag/${TAG}) at ${SOURCE_SHA}.\n\nRuntime modules, page assets and existing checks are synchronized; community package identity, repository and README are retained.\n\nExisting full community tests, package checks and pack dry-run passed in [this workflow](https://github.com/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}).\n\nPlease review and merge under the community rules. Upstream publication and these checks do not replace community approval.\n`);
           NODE
           if [[ -n "$PR" ]]; then
-            gh pr edit "$PR" --repo "$COMMUNITY" --title "chore(respire-memory): sync $VERSION" --body-file community-pr.md
+            gh api --method PATCH "repos/$COMMUNITY/pulls/$PR" -f "title=chore(respire-memory): sync $VERSION" -F body=@community-pr.md --jq .html_url
           else
             gh pr create --repo "$COMMUNITY" --base "$BASE" --head "${FORK%%/*}:$BRANCH" --title "chore(respire-memory): sync $VERSION" --body-file community-pr.md
           fi
