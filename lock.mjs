@@ -68,7 +68,15 @@ export async function acquireLock(path, { waitMs = 5000 } = {}) {
             continue;
           }
         }
-      } catch (e) { if (['ENOENT', 'EISDIR', 'ENOTDIR'].includes(e.code)) continue; throw e; }
+      } catch (e) {
+        if (['ENOENT', 'EISDIR', 'ENOTDIR'].includes(e.code)) continue;
+        // A competing release can leave the lock directory delete-pending during a probe.
+        if (process.platform === 'win32' && e.code === 'EPERM' && e.syscall === 'scandir' && e.path === path) {
+          if (Date.now() >= deadline) throw e;
+          await delay(25); continue;
+        }
+        throw e;
+      }
     }
     if (waitMs === 0 || Date.now() >= deadline) throw new Error('lock-busy');
     await delay(25);

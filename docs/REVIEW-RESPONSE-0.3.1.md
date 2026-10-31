@@ -47,7 +47,7 @@ Temporary enabling applies to the entire local gateway. Another live session als
 
 The v0.3.3 preflight at 4fc5411 exposed another Windows acquisition race: an owner-file open returned EPERM when empty-directory recovery removed the just-created directory before ownership was published. An earlier main-branch run at 96fd8da also failed at that path, although its separate release verification passed. The passing v0.3.2 runs above therefore did not establish absence of this intermittent failure.
 
-v0.3.3 retries only that Windows owner-file open failure, within the existing acquisition deadline; it never enters a critical section without verifying sole ownership. The existing eight-writer check now runs eight batches and verifies all 64 increments. Permanent failures still terminate; unknown/live owners and uncertain writes are not deleted or replayed. npm distribution first published v0.3.2 using Chrome-confirmed authentication; the next patch is used to validate the browser-configured OIDC connection.
+The stronger check also exposed Windows scandir EPERM during a recovery probe while a competing release removed the directory. v0.3.3 retries those acquisition-only open/probe failures within the existing deadline; it never enters a critical section without verifying sole ownership. The existing eight-writer check now runs eight batches and verifies all 64 increments. Permanent failures still terminate; unknown/live owners and uncertain writes are not deleted or replayed. npm distribution first published v0.3.2 using Chrome-confirmed authentication; the next patch is used to validate the browser-configured OIDC connection.
 
 ### Remaining host limits
 
