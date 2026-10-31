@@ -109,7 +109,7 @@ async function prepare(o, query, signal, entry, extra = {}, priorPolicy) {
   }));
   data.memories = records.filter(Boolean);
   if (o.showMemoryStatus) data.display = { notice: `Memory: ${data.memories.length} found`,
-    instruction: '仅非严格格式时显示简短状态。实际采用且已读正文才报告 Used: 真实短ID [basis|ref|history]（简短标题），默认ref；评分不是可信度，写后回读仅证明落库。未采用不编造Used。', priorSave: extra.priorSave };
+    instruction: 'Show the brief status only when the output format is not strict. Report Used: with the real short ID [basis|ref|history] (short title) only when memory is actually adopted and its body was read, defaulting to ref; scores are not confidence, and a write-then-read-back only proves the write landed. Never fabricate a Used line when nothing was adopted.', priorSave: extra.priorSave };
   return block(data, o.maxBytes);
 }
 
@@ -185,7 +185,7 @@ export async function onRequest(body, ctx) {
     retain(cache, key, entry);
     entry.pending = store.change(durableKey, async (saved, persist) => {
       if (saved?.phase === 'done') { entry.storage = saved.storage; entry.policyHash = saved.policyHash; return saved.text; }
-      if (saved?.phase === 'writing') return block({ storage: { status: 'uncertain', message: '该回合曾开始写入，结果未确认。先查库核实，禁止重试写入。' } }, o.maxBytes);
+      if (saved?.phase === 'writing') return block({ storage: { status: 'uncertain', message: 'This turn started a write whose result is unconfirmed. Verify against the store first; retrying the write is forbidden.' } }, o.maxBytes);
       await persist({ phase: 'processing' });
       entry.beforeWrite = () => persist({ phase: 'writing' });
       const extra = {};
