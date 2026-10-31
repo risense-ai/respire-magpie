@@ -23,8 +23,6 @@ The first v0.3.2 main-branch CI run passed macOS/Linux but exposed a separate fi
 | 11: community README / upstream reports | Community README is rewritten around its actual package, CI entry, monorepo dist/provenance and limitations. Personal paths and upstream release-workflow instructions are removed. Upstream reports are linked and explicitly labeled, not packaged as community CI evidence |
 | 12: placement / name | Entry/README row moved after the existing memory-hook entries. The requested product/display name respire-memory is retained rather than renamed to Respire |
 
-## Local verification
-
 ## Final automated verification
 
 - [Three-OS upstream CI at 1a080fb](https://github.com/risense-ai/respire-magpie/actions/runs/41192351640): Windows, Linux and macOS passed with Node 24 and Bun 1.3.6, including the discovered adapter and package dry-run.
@@ -45,6 +43,12 @@ A native local gateway request using the existing real model returned the requir
 
 Temporary enabling applies to the entire local gateway. Another live session also passed through it during the probe. The original disabled state/options were restored, the private test control lease was revoked, and the unrelated raw copy in this project's verification state was removed. That session's engine memories were not modified. No unrelated session content or IDs are published in this report.
 
-## Still not fulfilled
+## Follow-up found during npm publication
+
+The v0.3.3 preflight at 4fc5411 exposed another Windows acquisition race: an owner-file open returned EPERM when empty-directory recovery removed the just-created directory before ownership was published. An earlier main-branch run at 96fd8da also failed at that path, although its separate release verification passed. The passing v0.3.2 runs above therefore did not establish absence of this intermittent failure.
+
+v0.3.3 retries only that Windows owner-file open failure, within the existing acquisition deadline; it never enters a critical section without verifying sole ownership. The existing eight-writer check now runs eight batches and verifies all 64 increments. Permanent failures still terminate; unknown/live owners and uncertain writes are not deleted or replayed. npm distribution first published v0.3.2 using Chrome-confirmed authentication; the next patch is used to validate the browser-configured OIDC connection.
+
+### Remaining host limits
 
 The engine's strict before-send persistence requirement still needs an appropriate host callback or a client-owned loop: the current notification is after reply completion. Native desktop rendering, live all-protocol sessions, exhaustive crash/power-loss/account-switch recovery, npm first publication and marketplace approval remain outside the proven result. See the [feature matrix](FEATURES.md) and [0.3.0 correction report](TEST-REPORT-0.3.0.md).
