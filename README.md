@@ -181,3 +181,5 @@ setup 检查默认 Runtime、模式及状态目录，不发模型请求或安装
 参考 [Magpie Hook 契约](https://github.com/yetone/magpie/blob/main/docs/subsystems/gateway-request-hooks.md) 和 [PowerContext 插件](https://github.com/magpie-community/plugins/tree/main/packages/powercontext)。对话解析器为 MIT 改编；证据处理和受限工具复用 Respire Codex。见 NOTICE 和 LICENSE。
 
 0.3.7 的写后日记核验按回合来源标记执行 lexical 精确定位；一般历史查询仍默认 hybrid。两者都按实际 details JSON 检查请求预算，不放宽 4000 字符上限。见 [预算与回读跟进](docs/NPM-LIVE-0.3.7.md)。
+
+0.3.8 会在最多五个同来源候选中核验本轮完整正文，避免重复标记先命中旧正文而误报未确认；预算和失败不重放规则保持。参见[验收记录](docs/NPM-LIVE-0.3.8.md)。

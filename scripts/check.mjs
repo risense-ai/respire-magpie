@@ -75,8 +75,9 @@ const server = createServer(async (req, res) => {
     details: command === 'recall' ? (emptyRecall ? [] : [{ id }]) : command === 'prompt' ? null : command === 'chain' && oversizedChain ? { content: 'x'.repeat(16000) } : { entry: entries.get(r.args[2]) ?? entries.get(id) } };
   if (command === 'show') { envelope.summary.id = r.args[2]; if (r.args[2] === diaryId) wholeDiaryReads++; }
   if (command === 'diary-search' || command === 'diary-fragment') {
-    const text = command === 'diary-fragment' && brokenDiary ? 'Only the marker remains: ' + (entries.get(diaryId)?.content.split('【来源】回合 ')[1] ?? '') : entries.get(diaryId)?.content ?? '';
-    envelope.details = { items: [{ source_id: diaryId, fragment_id: 'fixture-fragment', source_version: 'fixture-version',
+    const oldMatch = 'Earlier write with the same marker: ' + (entries.get(diaryId)?.content.split('【来源】回合 ')[1] ?? '');
+    const text = command === 'diary-fragment' && (brokenDiary || r.args[3] === 'old-fragment') ? oldMatch : entries.get(diaryId)?.content ?? '';
+    envelope.details = { items: [{ source_id: diaryId, fragment_id: command === 'diary-fragment' ? r.args[3] : 'fixture-fragment', source_version: 'fixture-version',
       text, start: 0, end: Array.from(text).length, truncated: false }] };
     if (command === 'diary-fragment') {
       const chars = Array.from(text), split = Math.floor(chars.length / 2);
@@ -88,6 +89,7 @@ const server = createServer(async (req, res) => {
     if (command === 'diary-search') {
       const sourceLookup = /^[a-f0-9]{64}$/.test(r.args[2]), mode = r.args[r.args.indexOf('--mode') + 1];
       diaryLookups.push({ sourceLookup, mode });
+      if (sourceLookup) envelope.details.items.unshift({ ...envelope.details.items[0], fragment_id: 'old-fragment', text: oldMatch, end: Array.from(oldMatch).length });
       if ((sourceLookup || r.args[2] === 'over-budget historical fixture') && mode === 'hybrid') {
         // Real Runtime semantic-ready output exceeded its requested 4000-character budget.
         const unrelated = { ...envelope.details.items[0], source_id: '44444444-4444-4444-8444-444444444444', text: '' };

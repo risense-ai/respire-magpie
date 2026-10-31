@@ -1,5 +1,11 @@
 # Magpie PR 553 review repair report
 
+## Merge and v0.3.8 follow-up
+
+PR 553 merged at 2026-10-31T13:36:57Z as 21cbeeefe0d74727390f7ead7c28d8c7e2240d12, containing contribution 7aba754 (0.3.6). Its publish workflow 41206374423 passed test and dist, while npm failed on the unrelated existing middleware-think-tags trust configuration. Respire's new community npm name was explicitly listed as served from dist pending first publication. This is separate from the independently published @rsrsai/magpie.
+
+0.3.7's isolated native acceptance found a second readback issue: identical test messages reused a source hash, and the verifier chose an older same-marker candidate. It now checks the existing bounded candidate set for the exact complete written body, retaining all budgets and integrity checks. See [0.3.7 failed acceptance](NPM-LIVE-0.3.7.md) and [0.3.8 follow-up](NPM-LIVE-0.3.8.md). No uncertain write is replayed.
+
 ## v0.3.7 source-marker lookup and budget follow-up
 
 A later heartbeat wrote its diary successfully but exact readback stopped with diary-output-too-large. The real Runtime's semantic-ready hybrid search returned a 4,033-character details JSON for a 4,000-character request, including unrelated semantic matches. The matching source was present; an exact lexical lookup returned it alone in 1,017 characters. This is retained as a failed 0.3.6 observation, not a missing-write claim. No write was replayed: the known written body was subsequently verified through two versioned fragments using a read-only candidate check.
