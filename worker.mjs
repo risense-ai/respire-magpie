@@ -1,5 +1,4 @@
 import { join } from 'node:path';
-import { mkdir, writeFile } from 'node:fs/promises';
 import { pathToFileURL } from 'node:url';
 import { Store, accountIdentity, stateDirectory, digest } from './state.mjs';
 import { rpc, receipt, hasSecret, validId, options } from './runtime.mjs';
@@ -39,14 +38,17 @@ export async function processJob(store, name, { model, call: injectedCall } = {}
         if (args[0] === 'update') {
           const current = await rawCall(['show', args[1]]);
           if (job.o.project && current.details?.entry?.project !== job.o.project) throw new Error('project-mismatch');
-          // MG-05: persist a backup of the body being replaced before the update overwrites it.
-          // A failed backup fails the update closed (job -> unconfirmed) — never lose the old facts.
-          const entry = current.details?.entry ?? {};
-          const backup = { id: entry.id ?? args[1], title: entry.title ?? '', content: entry.content ?? '',
-            importance: entry.importance ?? '', updatedAt: entry.updated_at ?? '', backedUpAt: new Date().toISOString(), source: job.source };
-          const backups = join(store.dir, 'backups');
-          await mkdir(backups, { recursive: true });
-          await writeFile(join(backups, `${args[1]}-${backup.backedUpAt.replaceAll(':', '')}.json`), JSON.stringify(backup), { mode: 0o600 });
+          // MG-05: validate the receipt, then back the old body up through the Store's encrypted
+          // AES-256-GCM + atomic-rename path before the update may overwrite it. Any validation or
+          // persistence failure fails the update closed (job -> unconfirmed) — never overwrite unbacked.
+          const entry = current.details?.entry;
+          if (current.status !== 'ok' || !validId(args[1]) || typeof entry !== 'object' || entry === null
+            || !validId(entry.id) || !entry.id.startsWith(args[1])
+            || typeof entry.content !== 'string' || !entry.content.trim()) throw new Error('backup-source-invalid');
+          const backup = { id: entry.id, title: typeof entry.title === 'string' ? entry.title : '', content: entry.content,
+            importance: typeof entry.importance === 'string' ? entry.importance : '',
+            updatedAt: typeof entry.updated_at === 'string' ? entry.updated_at : '', backedUpAt: new Date().toISOString(), source: job.source };
+          await store.putBackup(`${entry.id}-${backup.backedUpAt.replaceAll(':', '')}.bin`, backup);
         }
         const trivial = args[0] === 'remember' && args[args.indexOf('--importance') + 1] === 'trivial';
         if (!trivial) {
@@ -129,6 +131,8 @@ export async function runQueue(dir) {
       queued.sort((a, b) => a.createdAt.localeCompare(b.createdAt) || a.name.localeCompare(b.name));
       for (const { name } of queued) await processJob(store, name);
     }
+    // Encrypted update backups are kept for seven days; stale ones are removed once the queue drains.
+    await store.pruneBackups();
   } finally { await release(); }
 }
 
