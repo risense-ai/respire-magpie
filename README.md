@@ -12,6 +12,8 @@
 
 审查修复：[0.3.1 审查逐项回复与验证](https://github.com/risense-ai/respire-magpie/blob/main/docs/REVIEW-RESPONSE-0.3.1.md)。
 
+0.3.14 审查修复：`update` 前备份改为经 Store 同一 AES-256-GCM 密钥加密并原子替换持久化（磁盘不含明文），写入前先校验 `show` 回执，失败关闭；备份保留七天，worker 队列排空后自动清理；README 修正停用取消边界表述，不宣称新增停用通知路径。
+
 详细说明：[功能与边界矩阵](https://github.com/risense-ai/respire-magpie/blob/main/docs/FEATURES.md) · [0.3.0 政策修复报告](https://github.com/risense-ai/respire-magpie/blob/main/docs/TEST-REPORT-0.3.0.md) · [0.2.1 历史验收](https://github.com/risense-ai/respire-magpie/blob/main/docs/TEST-REPORT.md)。核心链路已经实现并验收；自动识别客户端 plan、真实 SessionStart/恢复/压缩事件和原生状态行仍受宿主接口限制，不能视为与 Codex 全功能等价。
 
 0.3.0 每轮自动存检默认开启，使用前必须配置生成模型。没有模型、主动关闭归档或处于只读模式时，插件会说明未满足完整读存流程；不会把待处理当作已存。原始对话采集仍默认关闭。网关不会取得或复用客户端私有登录凭据，也不会注册或执行客户端工具。
@@ -95,11 +97,11 @@ magpie plugin add @rsrsai/magpie
 | readOnly | 禁止本插件显式存储、采集及后台写入，不限制其他客户端工具。 |
 | showMemoryStatus | 提供 Memory、Used 及上次归档状态提示，默认关闭；不能保证客户端显示，严格格式应省略标签。 |
 | capture | 完成回合原始文字与工具记录保存为 trivial 日记，默认关闭。日记按来源标记与有界片段核验；原文超出片段预算时不能确认完整回读，不会宣称采集成功或自动重放写入。 |
-| archive | 每个完成回合保存过程日记，并用独立模型提炼、查重、更新或挂靠与回读，默认开启；必须配置模型。日记写入回执中的整日正文会被宿主剔除；回读用来源标记、4000 字符预算及最多相邻一片段逐字核验，只给模型本轮正文与定位信息。接口不支持、定位失效或正文不完整时保持未确认。关闭即不满足完整每轮必存。 |
+| archive | 每个完成回合保存过程日记，并用独立模型提炼、查重、更新或挂靠与回读，默认开启；必须配置模型。日记写入回执中的整日正文会被宿主剔除；回读用来源标记、4000 字符预算及最多相邻一片段逐字核验，只给模型本轮正文与定位信息。接口不支持、定位失效或正文不完整时保持未确认。关闭即不满足完整每轮必存。**时序契约**：归档在宿主 `onResponse`（回复完成）后异步执行——这是已确认的产品方向，不承诺「答前已存」。**取消边界**：每次写前与每轮模型调用前都会重读控制租约/账号/引擎只读态；**控制状态已更新之后**发起的这类检查会读到新状态并停止该任务。停用/卸载后若没有后续请求，已分离的 worker 无法立即获知，其停止延迟受 280 秒总预算与当前检查点约束；本插件没有停用主动通知路径。**更新防丢**：任何 `update` 覆盖旧正文前，先校验 `show` 回执（状态 ok、返回条目 id 与目标一致、旧正文非空），再用状态目录同一密钥以 AES-256-GCM 加密、原子替换持久备份旧条目标题/正文到 `backups/`，磁盘文件不含明文；校验或备份写入失败都使该次更新失败关闭（任务转 unconfirmed），绝不无备份覆盖。备份保留七天，worker 队列排空后自动清理更早的备份。 |
 | generationBaseUrl | 兼容 Chat Completions 的基础地址，如 https://provider.example/v1；插件追加 /chat/completions。远程须 HTTPS，回环可 HTTP，不跟随重定向。 |
 | generationModel | 服务实际支持的模型名，启用 archive 时须填写。 |
 | authorizationEnv | 凭据所在环境变量名称，默认 RESPIRE_MAGPIE_AUTHORIZATION。无认证服务可不设置变量。 |
-| stateDir | 可选绝对路径，默认用户目录 .rsrs/magpie；加密保存去重状态、队列、证据、进度和结果。 |
+| stateDir | 可选绝对路径，默认用户目录 .rsrs/magpie；加密保存去重状态、队列、证据、进度、结果和更新前加密备份。 |
 
 生成凭据由用户在 Magpie 启动环境中设置。配置只保存变量名；密钥不进模型上下文、队列或状态日志。启用 archive 意味着允许将本轮消息、工具内容和相关记忆发给该服务，并产生额外模型用量。
 
@@ -126,7 +128,7 @@ magpie plugin add @rsrsai/magpie
 
 最终归档收到或回读全部用户原文后，才允许写入或成功结束。工具中段仍可通过证据工具读取。模型交互最多 40 轮，总预算 280 秒，单次生成最多 60 秒。超限或失败标为 unconfirmed，不假装完成。
 
-状态目录使用 AES-256-GCM 加密记录并原子替换文件；state.key 同目录保存，只保护未同时取得密钥的离线记录，不等同于系统密钥链或 Respire 库的加密。应保护和备份整个目录。队列上限 512 只计等待和运行任务，完成回执不会耗尽容量。终态原始证据保留 24 小时；完成回执及回合/会话缓存保留七天。维护在前台每小时及 worker 启动时执行；未确认写入只保留紧凑标记，不重放。证据过期后 evidence 明确报错，不伪造原文。以上只清理本地队列/缓存，不删除 Respire 库里的记忆。宿主关闭时不会运行清理，过期数据在下次维护时移除。
+状态目录使用 AES-256-GCM 加密记录并原子替换文件；state.key 同目录保存，只保护未同时取得密钥的离线记录，不等同于系统密钥链或 Respire 库的加密。应保护和备份整个目录。队列上限 512 只计等待和运行任务，完成回执不会耗尽容量。终态原始证据保留 24 小时；完成回执及回合/会话缓存保留七天；`update` 前的加密备份写入 `backups/`，同样保留七天，worker 队列排空后自动清理更早的备份。维护在前台每小时及 worker 启动时执行；未确认写入只保留紧凑标记，不重放。证据过期后 evidence 明确报错，不伪造原文。以上只清理本地队列/缓存，不删除 Respire 库里的记忆。宿主关闭时不会运行清理，过期数据在下次维护时移除。
 
 在完整插件目录，用 Node.js 24+ 或对应 Bun 解释器运行：
 
@@ -165,7 +167,7 @@ setup 检查默认 Runtime、模式及状态目录，不发模型请求或安装
 
 ## CI/CD 与发布
 
-- main 与 PR 运行 Windows、Linux、macOS 检查，覆盖四协议、HTTP 模拟服务、独立 worker、受限工具、加密状态、只读、未知写入及分段来源。
+- main 与 PR 运行 Windows、Linux、macOS 检查，覆盖四协议、HTTP 模拟服务、独立 worker、受限工具、加密状态、只读、未知写入、分段来源及加密更新备份（磁盘无明文、可解密恢复、失败关闭、七天保留）。
 - 推送 v<package.version> 标签触发三系统验证，通过后自动上传 tgz 与 SHA256SUMS 到 GitHub Release；预发布标签标为 prerelease。
 - npm 首发 0.3.2 通过用户 Chrome 的双重验证完成；后续 npm job 使用 OIDC 和 provenance，不上传长效 token。
 - 可信发布绑定 risense-ai/respire-magpie 的 release.yml，允许直接 publish；仓库变量 NPM_PUBLISH_ENABLED=true 控制 npm job。稳定版使用 latest，含连字符版本使用 next。只有同版本三系统验证与 GitHub Release 成功后才运行 npm 发布。
