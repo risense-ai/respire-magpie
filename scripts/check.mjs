@@ -45,7 +45,7 @@ assert(hasSecret({ content: '{"api_key":"fixture-secret"}' }));
 assert(hasSecret({ tool: { PGPASSWORD: 'fixture-secret' } }));
 const id = '11111111-1111-4111-8111-111111111111';
 let calls = 0;
-let generationRound = 0, unknownWrite = false, writes = 0, policyReady = true, emptyRecall = false, oversizedChain = false, brokenDiary = false, wholeDiaryReads = 0, fixturePolicy = 'Complete fixture policy';
+let generationRound = 0, unknownWrite = false, writes = 0, updatedFrom = '', policyReady = true, emptyRecall = false, oversizedChain = false, brokenDiary = false, wholeDiaryReads = 0, fixturePolicy = 'Complete fixture policy';
 const savedId = '22222222-2222-4222-8222-222222222222';
 const diaryId = '33333333-3333-4333-8333-333333333333';
 const commandLog = [];
@@ -98,6 +98,15 @@ const server = createServer(async (req, res) => {
         envelope.details.semantic_ready = true;
       }
     }
+  }
+  if (command === 'update') {
+    const target = r.args[2];
+    if (!entries.has(target)) { res.setHeader('Content-Type', 'application/json'); res.end(JSON.stringify({ v: 1, id: r.id, ok: false, exit: 1, envelope: { status: 'fail', errors: ['not found'] } })); return; }
+    const previous = entries.get(target);
+    updatedFrom = previous.content;
+    const contentAt = r.args.indexOf('--content');
+    entries.set(target, { ...previous, content: contentAt >= 0 ? r.args[contentAt + 1] : previous.content });
+    writes++; envelope.summary.id = target; envelope.details = { entry: entries.get(target) };
   }
   if (command === 'remember') {
     if (r.args[2] === 'pending-fixture-content') {
@@ -326,6 +335,32 @@ try {
     return { role: 'assistant', content: null, tool_calls: [{ id: 'scope-' + round, type: 'function', function: { name: 'respire_memory', arguments: JSON.stringify(input) } }] };
   } });
   assert.equal((await store.get(scopedName)).status, 'completed');
+  generationRound = 0;
+  // MG-05: an update must persist a backup of the replaced body before overwriting it
+  const updateSource = digest('update-backup'); const updateName = 'job-' + updateSource;
+  await store.put(updateName, makeJob(updateSource));
+  let updateRound = 0; let updateWrites = 0;
+  await processJob(store, updateName, { model: async (_o, messages) => {
+    const round = updateRound++; let input;
+    if (round === 0) input = { command: 'recall', args: ['project'] };
+    else if (round === 1) input = { command: 'prompt', args: [] };
+    else if (round === 2) input = { command: 'show', args: [savedId] };
+    else if (round === 3) input = { command: 'update', args: [savedId, '--content', '【前因】规则更新。【行为】补充验证。【后果】新版本生效。', '--title', '项目验证规则已更新'] };
+    else if (round === 4) input = { command: 'show', args: [savedId] };
+    else if (round === 5) input = { command: 'remember', args: ['助手在fixture主机完成规则更新。', '--importance', 'trivial'] };
+    else if (round === 6) input = { command: 'show', args: [diaryId] };
+    else return { role: 'assistant', content: JSON.stringify({ result: 'stored', ids: [savedId] }) };
+    return { role: 'assistant', content: null, tool_calls: [{ id: 'upd-' + round, type: 'function', function: { name: 'respire_memory', arguments: JSON.stringify(input) } }] };
+  }, call: async args => { if (args[0] === 'update') updateWrites++; return rpc(o, args) } });
+  const updatedJob = await store.get(updateName);
+  assert.equal(updatedJob.status, 'completed', JSON.stringify({ error: updatedJob.error }));
+  assert.equal(updateWrites, 1);
+  const backupsDir = join(stateDir, 'backups');
+  const backupFiles = readdirSync(backupsDir).filter(name => name.startsWith(savedId));
+  assert.equal(backupFiles.length, 1, 'exactly one backup per update');
+  const backupDoc = JSON.parse(readFileSync(join(backupsDir, backupFiles[0]), 'utf8'));
+  assert(backupDoc.content.includes('【前因】用户明确项目约定。'), 'backup holds the OLD body: ' + backupDoc.content.slice(0, 40));
+  assert(backupDoc.id === savedId && backupDoc.source === updateSource);
   generationRound = 0;
   const collision = makeJob(digest('session-collision')), collisionName = 'job-' + collision.source;
   await store.put(collisionName, collision);
