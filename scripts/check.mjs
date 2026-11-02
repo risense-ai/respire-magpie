@@ -285,8 +285,8 @@ try {
   for (const command of ['recall', 'prompt', 'show']) await placement.run({ command, args: command === 'show' ? [id] : [] });
   const placementBaseline = placementCalls.length;
   const unshownParent = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
-  for (const suffix of [['--clear-parent'], ['--clear-parent=true'], ['--parent', unshownParent], ['--parent=' + unshownParent], ['--parent', ''], ['--parent='], ['--force=true'], ['--merge-ids=' + id]]) {
-    await assert.rejects(() => placement.run({ command: 'update', args: [id, '--title', 'kept title', ...suffix] }), /forbidden-memory-option|shown-parent-required/);
+  for (const suffix of [['--importance', 'important'], ['--importance=important'], ['--importance', 'trivial'], ['--clear-parent'], ['--clear-parent=true'], ['--parent', unshownParent], ['--parent=' + unshownParent], ['--parent', ''], ['--parent='], ['--force=true'], ['--merge-ids=' + id]]) {
+    await assert.rejects(() => placement.run({ command: 'update', args: [id, '--title', 'kept title', ...suffix] }), /forbidden-memory-option|shown-parent-required|importance-update-forbidden/);
   }
   assert.equal(placementCalls.length, placementBaseline);
   await placement.run({ command: 'update', args: [id, '--title', 'kept title', '--parent=' + id] });
@@ -297,6 +297,13 @@ try {
   const diaryWrite = await diaryGuard.run({ command: 'remember', args: ['Current turn complete diary.', '--importance', 'trivial'] });
   assert(!JSON.stringify(diaryWrite).includes('Other turn:'));
   await assert.rejects(() => diaryGuard.run({ command: 'remember', args: ['Do not overwrite unverified daily write.', '--importance', 'trivial'] }), /diary-readback-required/);
+  await diaryGuard.run({ command: 'show', args: [diaryId] });
+  assert(diaryGuard.shown.has(diaryId), 'A verified diary read is still not permission to promote it');
+  const beforePromotion = writes;
+  for (const args of [[diaryId, '--title', 'blocked promotion', '--importance', 'important'], [diaryId, '--title', 'blocked promotion', '--importance=important']]) {
+    await assert.rejects(() => diaryGuard.run({ command: 'update', args }), /importance-update-forbidden/);
+  }
+  assert.equal(writes, beforePromotion);
   brokenDiary = true;
   await assert.rejects(() => diaryGuard.run({ command: 'show', args: [diaryId] }), /diary-readback-unconfirmed/);
   assert(diaryGuard.uncertain);
@@ -332,7 +339,7 @@ try {
   const queuedName = 'job-' + queuedCtx.state.respire.key;
   let queued;
   for (let i = 0; i < 100; i++) { queued = await store.get(queuedName); if (['completed', 'unconfirmed'].includes(queued?.status)) break; await new Promise(r => setTimeout(r, 100)); }
-  assert.equal(queued?.status, 'completed', JSON.stringify({ status: queued?.status, error: queued?.error }));
+  assert.equal(queued?.status, 'completed', JSON.stringify({ status: queued?.status, error: queued?.error, progress: queued?.progress, generationRound, commands: commandLog.slice(-15) }));
   const scopedName = 'job-' + digest('scope-check');
   const scoped = makeJob(digest('scope-check')); scoped.o = { ...o, project: 'fixture-project' };
   await store.put('control-' + digest(account, o.url, scoped.o.project), { readOnly: false, archive: true, capture: false, updatedAt: acceptedAt, signature: controlSignature(scoped.o) });
