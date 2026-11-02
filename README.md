@@ -12,6 +12,8 @@
 
 审查修复：[0.3.1 审查逐项回复与验证](https://github.com/risense-ai/respire-magpie/blob/main/docs/REVIEW-RESPONSE-0.3.1.md)。
 
+0.3.15 父节点校验：后台 `memoryTools` 禁止 `update --clear-parent`，并要求显式替换的 `--parent value` / `--parent=value` 均为已读条目。原有 force/merge 禁令覆盖等号写法；不改父节点的普通 update 和真实 trivial 日记沿用原流程。Magpie 网关没有客户端工具的硬拒接口，因此本插件不声称拦截客户端自行执行的 shell/MCP 写入；这些路径仍需引擎约束。已读只证明读取发生，不证明父节点在语义上合理。
+
 0.3.14 审查修复：`update` 前备份改为经 Store 同一 AES-256-GCM 密钥加密并原子替换持久化（磁盘不含明文），写入前先校验 `show` 回执，失败关闭；备份保留七天，worker 队列排空后自动清理；README 修正停用取消边界表述，不宣称新增停用通知路径。
 
 详细说明：[功能与边界矩阵](https://github.com/risense-ai/respire-magpie/blob/main/docs/FEATURES.md) · [0.3.0 政策修复报告](https://github.com/risense-ai/respire-magpie/blob/main/docs/TEST-REPORT-0.3.0.md) · [0.2.1 历史验收](https://github.com/risense-ai/respire-magpie/blob/main/docs/TEST-REPORT.md)。核心链路已经实现并验收；自动识别客户端 plan、真实 SessionStart/恢复/压缩事件和原生状态行仍受宿主接口限制，不能视为与 Codex 全功能等价。
