@@ -90,6 +90,7 @@ export function memoryTools(call, { readOnly = false, source } = {}) {
       if (write) {
         if (readOnly) throw new Error('read-only')
         if (uncertain || !recalled || !policy) throw new Error('read-before-write')
+        if (command === 'update' && args.some(arg => /^--importance(?:=|$)/.test(arg))) throw new Error('importance-update-forbidden')
         if ([...diaries.keys()].some(id => !verified.has(id))) throw new Error('diary-readback-required')
         if (containsSecret(JSON.stringify(input))) throw new Error('secret-content')
         if (trivial) {
