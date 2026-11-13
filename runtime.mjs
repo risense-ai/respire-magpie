@@ -18,6 +18,11 @@ export class Failure extends Error {
   constructor(code) { super(`Respire ${code}`); this.code = code; }
 }
 
+// Origins the host may pass in ctx.origin. Only these are accepted in
+// trustedOrigins so a typo cannot silently widen or narrow the gate.
+export const KNOWN_ORIGINS = ['local', 'magpie-key', 'gateway-key'];
+export const DEFAULT_TRUSTED_ORIGINS = ['local', 'magpie-key'];
+
 export function options(raw = {}) {
   const url = new URL(raw.runtimeUrl ?? 'http://127.0.0.1:15169');
   // Only literal loopback hosts: no DNS aliases, proxies, credentials or redirects.
@@ -27,7 +32,8 @@ export function options(raw = {}) {
     maxBytes: raw.maxBytes ?? 8000, limit: raw.limit ?? 3, remember: raw.remember ?? true, capture: raw.capture ?? false,
     readOnly: raw.readOnly ?? false, archive: raw.archive ?? true, showMemoryStatus: raw.showMemoryStatus ?? false,
     stateDir: raw.stateDir ?? '', generationBaseUrl: raw.generationBaseUrl ?? '',
-    generationModel: raw.generationModel ?? '', authorizationEnv: raw.authorizationEnv ?? 'RESPIRE_MAGPIE_AUTHORIZATION' };
+    generationModel: raw.generationModel ?? '', authorizationEnv: raw.authorizationEnv ?? 'RESPIRE_MAGPIE_AUTHORIZATION',
+    trustedOrigins: raw.trustedOrigins ?? DEFAULT_TRUSTED_ORIGINS };
   if (typeof o.project !== 'string' || o.project.length > 256 || /[\x00-\x1f\x7f]/.test(o.project) ||
       typeof o.remember !== 'boolean' || typeof o.capture !== 'boolean' ||
       !Number.isInteger(o.timeout) || o.timeout < 100 || o.timeout > 5000 ||
@@ -37,6 +43,10 @@ export function options(raw = {}) {
   for (const key of ['stateDir', 'generationBaseUrl', 'generationModel', 'authorizationEnv']) if (typeof o[key] !== 'string' || o[key].length > 2048 || /[\x00-\x1f\x7f]/.test(o[key])) throw new Failure('invalid');
   if (o.stateDir && !isAbsolute(o.stateDir)) throw new Failure('invalid');
   if (!/^[A-Za-z_][A-Za-z0-9_]*$/.test(o.authorizationEnv)) throw new Failure('invalid');
+  if (!Array.isArray(o.trustedOrigins) || o.trustedOrigins.length === 0 ||
+      o.trustedOrigins.length > KNOWN_ORIGINS.length ||
+      o.trustedOrigins.some(v => !KNOWN_ORIGINS.includes(v)) ||
+      new Set(o.trustedOrigins).size !== o.trustedOrigins.length) throw new Failure('invalid');
   if (o.generationBaseUrl) {
     const generation = new URL(o.generationBaseUrl);
     if (generation.href.includes('@') || generation.search || generation.hash || !(generation.protocol === 'https:' ||

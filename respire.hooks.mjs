@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto';
-import { options, rpc, Failure, bytes, validId, containsSecret, hasSecret, STORE_PREFIX, SKIP_PREFIX } from './runtime.mjs';
+import { options, rpc, Failure, bytes, validId, containsSecret, hasSecret, STORE_PREFIX, SKIP_PREFIX, DEFAULT_TRUSTED_ORIGINS } from './runtime.mjs';
 import { conversation } from './conversation.mjs';
 import { Store, stateDirectory, accountIdentity, digest } from './state.mjs';
 import { enqueue, wakeQueue, controlSignature } from './queue.mjs';
@@ -14,7 +14,9 @@ const cache = new Map();
 const captured = new Map();
 const recovered = new Set();
 const maintained = new Map();
-const trusted = ctx => ['local', 'magpie-key'].includes(ctx.origin);
+// Configurable so operators can opt in gateway-key (LAN/remote) callers
+// without patching the plugin after every update. Default is unchanged.
+const trusted = (ctx, o) => (o?.trustedOrigins ?? DEFAULT_TRUSTED_ORIGINS).includes(ctx.origin);
 const hash = (...parts) => createHash('sha256').update(JSON.stringify(parts)).digest('hex');
 const clean = text => text.replace(references, '').replace(policies, '');
 
@@ -114,12 +116,12 @@ async function prepare(o, query, signal, entry, extra = {}, priorPolicy) {
 }
 
 export async function onRequest(body, ctx) {
-  if (!trusted(ctx)) { ctx.report?.('skipped'); return; }
-  if (ctx.protocol === 'chat' && body.messages?.[0]?.role === 'system' && typeof body.messages[0].content === 'string'
-      && body.messages[0].content.startsWith(WORKER_MARKER + '\n')) { ctx.report?.('skipped'); return; }
   let o;
   try { o = options(ctx.options); }
   catch { ctx.report?.('invalid'); return; }
+  if (!trusted(ctx, o)) { ctx.report?.('skipped'); return; }
+  if (ctx.protocol === 'chat' && body.messages?.[0]?.role === 'system' && typeof body.messages[0].content === 'string'
+      && body.messages[0].content.startsWith(WORKER_MARKER + '\n')) { ctx.report?.('skipped'); return; }
   const configuredArchive = o.archive && !!(o.generationBaseUrl && o.generationModel);
   const changed = structuredClone(body);
   const all = turns(changed, ctx.protocol);
@@ -217,7 +219,7 @@ export async function onRequest(body, ctx) {
 
 export async function onResponse(reply, ctx) {
   const state = ctx.state?.respire;
-  if (!trusted(ctx) || !state || ctx.success !== true || state.o.readOnly || !(state.o.capture || state.o.archive) || captured.has(state.key)) return;
+  if (!state || !trusted(ctx, state.o) || ctx.success !== true || state.o.readOnly || !(state.o.capture || state.o.archive) || captured.has(state.key)) return;
   if (state.storeRequest && state.storage?.status === 'uncertain') return;
   // shortcut: server-referenced Responses history is not reconstructed; add a durable history source before capturing it.
   if (state.body.previous_response_id) { ctx.report?.('skipped'); return; }

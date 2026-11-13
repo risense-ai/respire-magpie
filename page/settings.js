@@ -12,6 +12,7 @@ magpie.ready.then(async () => {
     $('readOnly').checked = o.readOnly === true;
     $('archive').checked = o.archive !== false;
     $('showMemoryStatus').checked = o.showMemoryStatus === true;
+    $('allowGatewayKey').checked = Array.isArray(o.trustedOrigins) && o.trustedOrigins.includes('gateway-key');
     for (const name of ['generationBaseUrl', 'generationModel', 'stateDir']) $(name).value = o[name] ?? '';
     $('authorizationEnv').value = o.authorizationEnv ?? 'RESPIRE_MAGPIE_AUTHORIZATION';
     $('save').disabled = false;
@@ -48,6 +49,7 @@ $('form').onsubmit = async event => {
     await magpie.options.set({ ...previous, runtimeUrl: url.href, project,
       remember: $('remember').checked, capture: $('capture').checked, readOnly: $('readOnly').checked,
       showMemoryStatus: $('showMemoryStatus').checked, archive: $('archive').checked,
+      trustedOrigins: $('allowGatewayKey').checked ? ['local', 'magpie-key', 'gateway-key'] : ['local', 'magpie-key'],
       generationBaseUrl, generationModel, authorizationEnv, stateDir });
     status('配置已保存，将用于后续请求。');
   } catch { status('保存未确认，请重新打开页面核对配置后再操作。'); }
