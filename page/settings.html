@@ -25,6 +25,8 @@
     <label class="check"><input id="readOnly" type="checkbox">插件只读：禁止显式存储、采集和后台归档</label>
     <label class="check"><input id="showMemoryStatus" type="checkbox">向模型提供 Memory、Used 和上次保存状态提示</label>
     <label class="check"><input id="capture" type="checkbox">将每轮完成的对话保存到日记</label>
+    <label class="check"><input id="allowGatewayKey" type="checkbox">允许 gateway-key 来源（局域网/远程客户端共用此记忆库）</label>
+    <small>默认关闭：仅 local 与 magpie-key 来源启用记忆。开启后，任何持有 Magpie 网关密钥的调用者都能读写同一记忆库；多项目共用时请先设置项目名称。</small>
     <p class="disclosure">开启采集后，用户与助手消息、工具参数和结果中的文件内容、命令输出均可能进入 Respire。日记仍按你的同步设置同步；这不会自动提炼为长期结论。</p>
     <fieldset><legend>后台记忆整理</legend>
       <label class="check"><input id="archive" type="checkbox" checked>每个完成回合自动存过程日记，并提炼、查重和整理长期记忆</label>

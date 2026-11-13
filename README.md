@@ -85,7 +85,8 @@ magpie plugin add @rsrsai/magpie
   "generationBaseUrl": "",
   "generationModel": "",
   "authorizationEnv": "RESPIRE_MAGPIE_AUTHORIZATION",
-  "stateDir": ""
+  "stateDir": "",
+  "trustedOrigins": ["local", "magpie-key"]
 }
 ```
 
@@ -106,8 +107,11 @@ magpie plugin add @rsrsai/magpie
 | generationModel | 服务实际支持的模型名，启用 archive 时须填写。 |
 | authorizationEnv | 凭据所在环境变量名称，默认 RESPIRE_MAGPIE_AUTHORIZATION。无认证服务可不设置变量。 |
 | stateDir | 可选绝对路径，默认用户目录 .rsrs/magpie；加密保存去重状态、队列、证据、进度、结果和更新前加密备份。 |
+| trustedOrigins | 允许触发召回与归档的宿主来源，默认 `["local","magpie-key"]`。可加入 `"gateway-key"` 让经局域网/远程网关密钥访问 Magpie 的客户端也使用记忆；只允许 `local`、`magpie-key`、`gateway-key` 三个已知值，不接受重复项或空数组。这是信任边界而非项目隔离：开启后任何持有 Magpie 网关密钥的调用者都能读写同一记忆库，多项目共用时请配合 `project`。 |
 
 生成凭据由用户在 Magpie 启动环境中设置。配置只保存变量名；密钥不进模型上下文、队列或状态日志。启用 archive 意味着允许将本轮消息、工具内容和相关记忆发给该服务，并产生额外模型用量。
+
+默认只有 `local` 与 `magpie-key` 来源启用记忆；`gateway-key`（Magpie 局域网共享 / Gateway keys 的调用方）会被静默跳过。若希望所有经 Magpie 的请求都有记忆，可在设置页勾选「允许 gateway-key 来源」，或用 `magpie plugin options` 把 `trustedOrigins` 设为 `["local","magpie-key","gateway-key"]`。该选项为显式配置，插件更新不会覆盖；未开启时行为与旧版本完全一致。
 
 ## 使用方式
 

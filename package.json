@@ -49,7 +49,11 @@
       "generationBaseUrl": "",
       "generationModel": "",
       "authorizationEnv": "RESPIRE_MAGPIE_AUTHORIZATION",
-      "stateDir": ""
+      "stateDir": "",
+      "trustedOrigins": [
+        "local",
+        "magpie-key"
+      ]
     },
     "page": {
       "title": "respire-memory",

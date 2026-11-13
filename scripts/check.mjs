@@ -38,6 +38,12 @@ if (pkg.name.startsWith('@magpie-community/')) {
 }
 assert.equal(options().archive, true); assert.equal(pkg.magpie.options.archive, true);
 assert.equal(options().showMemoryStatus, false); assert.equal(pkg.magpie.options.showMemoryStatus, false);
+assert.deepEqual(options().trustedOrigins, ['local', 'magpie-key']);
+assert.deepEqual(pkg.magpie.options.trustedOrigins, ['local', 'magpie-key']);
+assert.deepEqual(options({ trustedOrigins: ['local', 'magpie-key', 'gateway-key'] }).trustedOrigins,
+  ['local', 'magpie-key', 'gateway-key']);
+for (const bad of [[], ['local', 'local'], ['nope'], ['local', 'magpie-key', 'gateway-key', 'extra']])
+  assert.throws(() => options({ trustedOrigins: bad }));
 assert.deepEqual(Buffer.from(pkg.magpie.icon.split(',')[1], 'base64'), readFileSync(pkg.magpie.page.icon));
 for (const path of pkg.files) assert(existsSync(path), path);
 for (const runtimeUrl of ['http://example.com', 'http://u:x@127.0.0.1', 'http://127.0.0.1/path']) assert.throws(() => options({ runtimeUrl }));
